@@ -1,6 +1,3 @@
-# Publishable = "pk_live_51KrCOaLTObQHYLJ1khpxHGm3tDncVAHicCiFtbTz7YPmz9az2teckmj6yiq07NYNk71UX7siUgOM4iMpwBjkBaX200pPxKFn0H"
-# Secret = "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"
-
 import stripe
 
 
