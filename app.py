@@ -1,6 +1,10 @@
 from fastapi import FastAPI, Request
 import telegram
+import json
+import stripe
 
+
+stripe.api_key = "sk_test_51KrCOaLTObQHYLJ1PmfqCSsYuDxmqDV9sqTEaxNF0dLh7YZqBrA1J49rR7NnZnd7xIeRGPqmkuiuSqXFpDdYLUlY00bilidgOR"
 TOKEN = '5641356025:AAFhotXRyhkUXWcFBXhSN78gs0Hk9AjPpNY'
 bot = telegram.Bot(TOKEN)
 
@@ -18,4 +22,19 @@ async def echo(request: Request):
     chat_id = update.message.chat.id
     message_text = update.message.text
     await send_text(chat_id, message_text)
+    return {"status": "ok"}
+
+
+@app.post("/form")
+async def echo(request: Request):
+    update_data = dict(await request.form())
+    print(update_data)
+    return {"status": "ok"}
+
+
+
+@app.post("/stripe")
+async def echo(request: Request):
+    update_data = await request.json()
+    print(update_data)
     return {"status": "ok"}

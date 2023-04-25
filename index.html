@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Session Table</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    .customButton { 
+    border:3px solid #000000;
+    border-radius:81px;
+    padding:10px;
+    margin:10px;
+    background-color:#F90000;
+    color:#000000;
+    font-weight:bold;
+    opacity:1;
+    transition:1s;
+    } 
+    .customButton:hover {
+    cursor:pointer;
+    background-color:#F9F9F9;
+    opacity:0.5;
+    transition:1s;
+    color:#000000;
+    } 
+
+
+    input[type="checkbox"] {
+      width: 30px;
+      height: 30px;
+    }
+    table {
+      border-collapse: collapse;
+      border: 2px solid black;
+    }
+    td, th {
+      border: 1px solid rgb(0, 0, 0);
+      padding: 5px;
+      text-align: center;
+      vertical-align: middle;
+      background-color: hsl(0, 100%, 50%);
+    }
+    td:first-child, th:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      background-color: rgb(7, 14, 0);
+    }
+    table td, table th {
+      color: white;
+    }
+    @media screen and (max-width: 600px) {
+      table {
+        font-size: 12px;
+      }
+      td, th {
+        padding: 3px;
+      }
+      td:first-child, th:first-child {
+        position: static;
+        background-color: rgb(0, 119, 255);
+      }
+      table td, table th {
+        color: black;
+      }
+    }
+  </style>
+  
+  
+  
+  <script>
+    function submitForm() {
+    // Get all the checkboxes in the form
+    var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    
+    // Loop through all the checkboxes and log their checked state
+    for (var i = 0; i < checkboxes.length; i++) {
+        console.log(checkboxes[i].name + ": " + checkboxes[i].checked);
+    }
+    document.querySelector('form').submit();
+    }
+    
+    function generateTable() {
+  var today = new Date();
+  var table = document.getElementById("session-table");
+  
+  // Add table header row
+  var headerRow = table.createTHead().insertRow();
+  
+  // Add empty header cell in the top left corner for spacing
+  headerRow.insertCell();
+  
+  // Add header cell for today's date in "24 April" format
+  headerRow.insertCell().innerHTML = formatDateHeader(today);
+  
+  // Add header cells for next 60 days
+  for (var i = 0; i < 60; i++) {
+    today.setDate(today.getDate() + 1);
+    var headerCell = headerRow.insertCell();
+    
+    headerCell.innerHTML = formatDateHeader(today);
+
+  }
+
+  // Add table body rows
+  for (var j = 1; j <= 8; j++) {
+    var today = new Date();
+    var bodyRow = table.insertRow();
+    var sessionCell = bodyRow.insertCell();
+    sessionCell.innerHTML = "Session " + j;
+    for (var i = 0; i < 60; i++) {
+      var date = formatDateCheckbox(today);
+      var checkboxName = date + "+session_" + j;
+      var checkboxCell = bodyRow.insertCell();
+      var checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.name = checkboxName;
+      checkboxCell.appendChild(checkbox);
+      today.setDate(today.getDate() + 1);
+    }
+  }
+}
+
+
+function formatDateHeader(date) {
+  var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  var dayOfWeek = days[date.getDay()];
+  var day = date.getDate();
+  var monthNames = ["January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+  ];
+  var month = monthNames[date.getMonth()];
+  return day + ' ' + month + ' ' + dayOfWeek;
+}
+
+
+function formatDateCheckbox(date) {
+  var year = date.getFullYear();
+  var month = padZero(date.getMonth() + 1);
+  var day = padZero(date.getDate());
+  return year + "-" + month + "-" + day;
+}
+
+function padZero(number) {
+  return number.toString().padStart(2, "0");
+}
+
+    
+function formatDate(date) {
+  var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  var dayOfWeek = days[date.getDay()];
+  var day = date.getDate();
+  var monthNames = ["January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+  ];
+  var month = monthNames[date.getMonth()];
+  return day + ' ' + month + ' ' + dayOfWeek;
+}
+
+
+    
+    function padZero(number) {
+      return number.toString().padStart(2, "0");
+    }
+  </script>
+</head>
+<body onload="generateTable()">
+    <form action="https://4b9a-210-10-2-207.ngrok.io/ojas" method="POST">
+        <table id="session-table">
+        </table>
+        <br>
+        <!-- <button type="button" onclick="submitForm()">Submit</button> -->
+    </form>
+    <p>Choose the sessions which you want us to book for you.<br> Please <b>try to select as many sessions as possible to maximise our ability to book a slot for you</b>. <br><br>You may come back to this website anytime to change and update the slots which you are free for.</p>
+    <br>
+    <div class="html_button btn-left">
+      <a href="#" class="btn customButton large" onclick="submitForm()">Save Changes</a>
+    </div>
+</body>
+</html>
