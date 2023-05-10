@@ -77,49 +77,73 @@
     for (var i = 0; i < checkboxes.length; i++) {
         console.log(checkboxes[i].name + ": " + checkboxes[i].checked);
     }
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+    document.getElementById("id").value = id;
     document.querySelector('form').submit();
     }
     
-    function generateTable() {
-  var today = new Date();
-  var table = document.getElementById("session-table");
-  
-  // Add table header row
-  var headerRow = table.createTHead().insertRow();
-  
-  // Add empty header cell in the top left corner for spacing
-  headerRow.insertCell();
-  
-  // Add header cell for today's date in "24 April" format
-  headerRow.insertCell().innerHTML = formatDateHeader(today);
-  
-  // Add header cells for next 60 days
-  for (var i = 0; i < 60; i++) {
-    today.setDate(today.getDate() + 1);
-    var headerCell = headerRow.insertCell();
     
-    headerCell.innerHTML = formatDateHeader(today);
+    function generateTable() {
+      var today = new Date();
+      var table = document.getElementById("session-table");
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get('id');
+      var ok;
+      fetch(`https://f9cd-138-75-252-171.ngrok.io/obtain_session/${id}`)
+      .then(response => response.json()) // Extract JSON response
+      .then(data => {
+      ok = data; // Save data into the `ok` variable
+      const a_list = Object.entries(ok)
+      .map(([date, sessions]) => sessions.map(session => `${date}+session_${session}`))
+      .flat();
+      console.log(a_list);
+      // Check the checkboxes with the names in `a_list`
+      a_list.forEach(name => {
+        var checkbox = document.getElementsByName(name)[0];
+        if (checkbox) {
+          checkbox.checked = true;
+        }
+      });
+    })
+      .catch(error => console.error(error));
+      // Add table header row
+      var headerRow = table.createTHead().insertRow();
+      // Add empty header cell in the top left corner for spacing
+      headerRow.insertCell();
+      
+      // Add header cell for today's date in "24 April" format
+      headerRow.insertCell().innerHTML = formatDateHeader(today);
+      
+      // Add header cells for next 60 days
+      for (var i = 0; i < 60; i++) {
+        today.setDate(today.getDate() + 1);
+        var headerCell = headerRow.insertCell();
+        
+        headerCell.innerHTML = formatDateHeader(today);
 
-  }
+      }
 
-  // Add table body rows
-  for (var j = 1; j <= 8; j++) {
-    var today = new Date();
-    var bodyRow = table.insertRow();
-    var sessionCell = bodyRow.insertCell();
-    sessionCell.innerHTML = "Session " + j;
-    for (var i = 0; i < 60; i++) {
-      var date = formatDateCheckbox(today);
-      var checkboxName = date + "+session_" + j;
-      var checkboxCell = bodyRow.insertCell();
-      var checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.name = checkboxName;
-      checkboxCell.appendChild(checkbox);
-      today.setDate(today.getDate() + 1);
-    }
-  }
+      // Add table body rows
+      for (var j = 1; j <= 8; j++) {
+        var today = new Date();
+        var bodyRow = table.insertRow();
+        var sessionCell = bodyRow.insertCell();
+        sessionCell.innerHTML = "Session " + j;
+        for (var i = 0; i < 60; i++) {
+          var date = formatDateCheckbox(today);
+          var checkboxName = date + "+session_" + j;
+          var checkboxCell = bodyRow.insertCell();
+          var checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.name = checkboxName;
+          checkboxCell.appendChild(checkbox);
+          today.setDate(today.getDate() + 1);
+        }
+      }
 }
+
+
 
 
 function formatDateHeader(date) {
@@ -157,19 +181,17 @@ function formatDate(date) {
   return day + ' ' + month + ' ' + dayOfWeek;
 }
 
-
-    
     function padZero(number) {
       return number.toString().padStart(2, "0");
     }
   </script>
 </head>
 <body onload="generateTable()">
-    <form action="https://4b9a-210-10-2-207.ngrok.io/ojas" method="POST">
+    <form action="https://f9cd-138-75-252-171.ngrok.io/form" method="POST">
+        <input type="hidden" name="id" id="id">
         <table id="session-table">
         </table>
         <br>
-        <!-- <button type="button" onclick="submitForm()">Submit</button> -->
     </form>
     <p>Choose the sessions which you want us to book for you.<br> Please <b>try to select as many sessions as possible to maximise our ability to book a slot for you</b>. <br><br>You may come back to this website anytime to change and update the slots which you are free for.</p>
     <br>

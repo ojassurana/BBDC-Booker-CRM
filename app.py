@@ -1,0 +1,588 @@
+# python3 -m uvicorn app:app --port 5320  --host 0.0.0.0
+# https://f347-138-75-252-171.ngrok.io/telegram
+
+from fastapi import FastAPI, Request, Header, Response
+from fastapi.middleware.cors import CORSMiddleware
+from telegram import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
+from datetime import datetime
+from typing import Dict, List
+import telegram
+from telegram import constants
+import stripe
+from pymongo import MongoClient
+import random
+import string
+import traceback
+import json
+global mongo
+global users
+global clients
+global msg1
+
+
+# API Keys: ___________________________________________________________________________________________________________
+TOKEN = '5641356025:AAFhotXRyhkUXWcFBXhSN78gs0Hk9AjPpNY'
+stripe.api_key = "sk_test_51KrCOaLTObQHYLJ1PmfqCSsYuDxmqDV9sqTEaxNF0dLh7YZqBrA1J49rR7NnZnd7xIeRGPqmkuiuSqXFpDdYLUlY00bilidgOR"
+webhook_secret = "whsec_rSxDn6C2pMp1ALQK8wA4RiOVcS09glK2"
+mongodb_key = "ojas.pem"
+heroku_url = "https://35e8-118-200-38-197.ngrok.io"
+admin_id = -974308978
+# Client: ____________________________________________________________________________________________________________  
+bot = telegram.Bot(TOKEN)
+app = FastAPI()
+uri = "mongodb+srv://cluster0.mqlx5ut.mongodb.net/?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority"
+mongo = MongoClient(uri,
+                     tls=True,
+                     tlsCertificateKeyFile='ojas.pem')
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+# Text: ______________________________________________________________________________________________________________
+msg1 = '''<u><b>What this bot does:</b></u>
+We are a team of individuals who will assist in booking your BBDC practical lessons slots based on your given schedule.
+<b>Remember to keep your BBDC Balance TOPPED UP!</b>
+
+✅ <b>Supported</b>: Class 3/3A Practical lessons
+❌ <b>Not supported</b>: FTT/BTT/TPDS/DS
+
+<u><b>Pricing:</b></u>
+1 credit will be deducted for every practical slot booked.
+See /credits command for more information.
+
+<u><b>How to use:</b></u>
+Use /setlogin command to update your BBDC username and password.
+Add bot credits with /credits command.
+Use the /choose_session command to select the practical sessions you are available for.
+Use the /start_checking command to start checking for new slots. We will automatically do it for you and inform you if you got a slot. Use the /stop_checking command to stop checking for new slots.
+The bot will notify you once a slot is found and booked for you.
+Use /help command to view a list of all other useful commands.
+
+<u><b>Get notified of slots outside of your specified schedule:</b></u>
+Click on this link.
+
+<u><b>Note:</b></u>
+In case there are any issues, we will contact you immediately on WhatsApp.
+'''
+msg2 = "You may use the /help command to find out more."
+msg3 = '''
+<b><u>Available Credits:</u></b> {credits}
+<b><u>Credits used:</u></b> {credits_used}
+
+You can buy Bot credits for $10 per credit. Whenever you purchase a slot successfully, one credit will be deducted from your account. If you resell any of the slots you've purchased, you won't get a refund for the credits used.
+
+<b><u>Topping up credits:</u></b>
+Visit the link below, determine the amount of credits you wish to purchase and proceed to pay with PayNow.
+
+<b><u>Link:</u></b>
+https://buy.stripe.com/{product_payment_code}?client_reference_id={random_id}
+
+You will receive a notification upon the payment being completed, if any issues are to arise, use the /help command.
+'''
+# Functions: _________________________________________________________________________________________________________
+users = mongo['Users']
+clients = users['clients']
+admin = users['admin']
+
+def get_info_validator(input_str):
+    input_list = input_str.strip().split()
+    if len(input_list) != 2:
+        return False
+    command, user_id = input_list
+    if command != "/get_info":
+        return False
+    if len(user_id) != 4:
+        return False
+    return user_id
+
+
+
+async def update_state_admin(chat_id, major, minor):
+    admin.update_one({"_id": chat_id}, {"$set": {"state.major": major, "state.minor": minor}})
+
+
+def top_up_validator(input_str):
+    input_list = input_str.strip().split()
+    if len(input_list) != 2:
+        return False
+    command, user_id = input_list
+    if command != "/top_up":
+        return False
+    if len(user_id) != 4:
+        return False
+    return user_id
+
+
+def wrong_login_validator(input_str):
+    input_list = input_str.strip().split()
+    if len(input_list) != 2:
+        return False
+    command, user_id = input_list
+    if command != "/wrong_login":
+        return False
+    if len(user_id) != 4:
+        return False
+    return user_id
+
+
+
+def user_group_validator(input_str):
+    input_list = input_str.split(" ")
+    if len(input_list) != 3:
+        return False
+    user_id, group_id = input_list[1], input_list[2]
+    if len(user_id) != 4:
+        return False
+    if len(group_id) != 5:
+        return False
+    if group_id[0] != "G":
+        return False
+    if group_id[1] not in ["6", "8", "9"]:
+        return False
+    if not group_id[2:].isdigit():
+        return False
+    return [user_id, group_id]
+
+
+
+def user_test_validator(input_str):
+    input_list = input_str.split(" ")
+    if len(input_list) != 3:
+        return False
+    user_id, test = input_list[1], input_list[2]
+    if test.lower() == "none":
+        return [user_id, "None"]
+    if len(user_id) != 4:
+        return False
+    try:
+        datetime.strptime(test, '%d-%m-%y')
+    except:
+        return False
+    return [user_id, test]
+
+
+
+def session_is_empty(session_choices):
+    if session_choices == {} or session_choices == None or session_choices == []: 
+        return True
+    for date, sessions in session_choices.items():
+        if date >= datetime.datetime.now().strftime("%Y-%m-%d"):
+            return False
+    return True
+
+
+def generate_table_history(booking_history):
+    for document in booking_history:
+        credits_used = document["credits_used"]
+        date = document["date"]
+        session = document["session"]
+        output += f"{date}\n{session}\n{credits_used}\n--------------------------------\n"
+    return output
+
+
+
+def generate_table(data_dict):
+    # Create the header row
+    header = "<b>Date:</b>             |<b>Sessions:</b>"
+
+    # Create the separator row
+    separator = "-" * len(header)
+
+    # Combine the header and separator rows
+    table = f"{header}\n{separator}"
+
+    # Iterate over the data dictionary and add each row to the table
+    for date, session_data in data_dict.items():
+        # Convert the session data to a comma-separated string
+        session_str = ", ".join(str(s) for s in session_data)
+
+        # Add the row to the table
+        table += f"\n{date}\t\t| {session_str}"
+
+    return table
+
+
+
+async def top_up(amount, client_reference_id, stripe_id, time):
+    price_of_each_credit = 10
+    credits = amount/price_of_each_credit
+    to_add = {"amount": amount, "stripe_id": stripe_id, "time": time, "credits": credits}
+    clients.update_one({"random_id": client_reference_id}, {"$push": {"topup_history":  to_add}})
+    clients.update_one({"random_id": client_reference_id}, {"$inc": {"credits": credits}})
+    message = "Congratulations! You have topped up " + str(int(credits)) + " credits.\nThe total amount you paid us via PayNow is: $"+str(amount)
+    telegram_id = clients.find_one({"random_id": client_reference_id})["_id"]
+    await send_text(telegram_id, message)
+    await send_text(telegram_id, "You may use the /credits command to check your total amount of credits.")
+
+
+async def update_session_choices(user_id, sessions):
+    clients.update_one({"random_id": user_id}, {"$set": {"session_choices": sessions}})
+    
+
+
+async def send_text(chat_id, message_text):
+    await bot.send_message(chat_id, message_text, parse_mode=telegram.constants.ParseMode.HTML)
+
+
+
+async def update_state_client(chat_id, major, minor):
+    clients.update_one({"_id": chat_id}, {"$set": {"state.major": major, "state.minor": minor}})
+
+
+async def update_state_admin(chat_id, major, minor):
+    admin.update_one({"_id": chat_id}, {"$set": {"state.major": major, "state.minor": minor}})
+
+
+async def update_info_payload(chat_id, key, pair):
+    clients.update_one({"_id": chat_id}, {"$set": {str("info_payload."+key): pair}})
+
+
+async def info_payload_reset(chat_id):
+    clients.update_one({"_id": chat_id}, {"$set": {"info_payload": {}}})
+
+
+async def info_payload_reset_admin(chat_id):
+    admin.update_one({"_id": chat_id}, {"$set": {"info_payload": {}}})
+
+
+async def update_client_info_from_payload(chat_id, info_payload):
+    for key in info_payload:
+        clients.update_one({"_id": chat_id}, {"$set": {str(key): info_payload[key]}})
+
+
+async def send_options_buttons(chat_id, text, options):
+    buttons = []
+    for option in options:
+        buttons.append(InlineKeyboardButton(text=option, callback_data=option))
+    keyboard = [buttons]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await bot.send_message(chat_id=chat_id, text=text, reply_markup=reply_markup)
+
+
+
+
+
+async def setlogin_handler(chat_id, client_status, update):
+    if client_status['state']['minor'] == 1 and update.message and update.message.text:
+        text = update.message.text
+        await update_info_payload(chat_id, "username", text)
+        await send_text(client_status['_id'], "Please enter your BBDC password:")
+        await update_state_client(client_status['_id'], 1, 2)
+    elif client_status['state']['minor'] == 2 and update.message and update.message.text:
+        text = update.message.text
+        await update_info_payload(chat_id, "password", text)
+        await send_options_buttons(client_status['_id'], "Are you booking Class 3A or Class 3 lesson slot?",["Class 3A", "Class 3"])
+        await update_state_client(client_status['_id'], 1, 3)
+    elif client_status['state']['minor'] == 3 and update.callback_query and update.callback_query.data:
+        text = update.callback_query.data
+        if text == "Class 3A":
+            await update_info_payload(chat_id, "type", "3A")
+        elif text == "Class 3":
+            await update_info_payload(chat_id, "type", "3")
+        else:
+            await send_text(chat_id, "Please select an option instead!")
+            return False
+        await update_state_client(client_status['_id'], 1, 4)
+        reply_keyboard = [[KeyboardButton("Share Phone Number", request_contact=True)]]
+        markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=True)
+        await bot.send_message(chat_id, text="Please share your phone number", reply_markup=markup)
+    elif client_status['state']['minor'] == 4 and update.message.contact != None:
+        await update_state_client(client_status['_id'], 0, 0)
+        await update_info_payload(chat_id, "phone", update.message.contact.phone_number)
+        info_payload = clients.find_one({'_id': chat_id})['info_payload']
+        await update_client_info_from_payload(chat_id, info_payload)
+        await info_payload_reset(chat_id)
+        await bot.send_message(chat_id=update.message.chat_id, text="Your BBDC username and password has been updated!", reply_markup=ReplyKeyboardRemove())
+        if client_status["group"] == "": # Yet to set the group
+            await send_text(admin_id, "A new user has been added to the database.\n<b>Database ID is:</b> " + client_status['random_id'])
+    else:
+        await send_text(chat_id, "Please enter a valid input")
+
+
+@app.post("/telegram")
+async def echo(request: Request):
+    try:
+        update_data = await request.json()
+        update = telegram.Update.de_json(update_data, bot)
+        if update.message:
+            chat_id = update.message.chat_id
+        elif update.callback_query:
+            chat_id = update.callback_query.message.chat_id
+        else:
+            await send_text(chat_id, "Your message type isn't supported.")
+            return {"status": "ok"}
+        if clients.find_one({'_id': chat_id}):
+            client_status = clients.find_one({'_id': chat_id})
+            if client_status['state']['major'] == 0:
+                if update.message:
+                    if "/start" == update.message.text :
+                        await send_text(chat_id, msg1)
+                        await send_text(chat_id, msg2)
+                    elif "/setlogin" == update.message.text:
+                        await send_text(chat_id, "Please enter your BBDC username:")
+                        await update_state_client(chat_id, 1, 1)
+                    elif "/cancel" == update.message.text:
+                        await send_text(chat_id, "Your current procedure has been cancelled.")
+                        await update_state_client(chat_id, 0, 0)
+                        await info_payload_reset(chat_id)
+                        return {"status": "ok"}
+                    elif "/credits" == update.message.text:
+                        if client_status['username'] == "":
+                            await send_text(chat_id, "Please set your login details first using the /setlogin command")
+                        else:
+                            credits = client_status['credits']
+                            credits_used = client_status['credits_used']
+                            random_id = client_status['random_id']
+                            product_payment_code = "test_5kAbKp4PK4a52ac4gh"
+                            await send_text(chat_id, msg3.format(credits=credits, credits_used=credits_used, random_id=random_id, product_payment_code=product_payment_code))
+                    elif "/choose_session" == update.message.text:
+                        # checks if client has credits
+                        if client_status['credits'] < 1:
+                            await send_text(chat_id, "You do not have enough credits to book a session. Please top up your credits using the /credits command first") 
+                            return {"status": "ok"}
+                        else:
+                            await send_text(chat_id, "Click on the following link to inform us your free timing:\nhttps://bbdcbot.s3.ap-southeast-1.amazonaws.com/index.html?id="+client_status['random_id'])
+                            return {"status": "ok"}
+                    elif "/start_checking" == update.message.text:
+                        if client_status["checking"] == True:
+                            await send_text(chat_id, "You are already in the queue for checking. Please wait for the next available slot.")
+                            return {"status": "ok"}
+                        else:
+                            if client_status['credits'] < 1:
+                                await send_text(chat_id, "You do not have enough credits to book a session. Please top up your credits using the /credits command first") 
+                                return {"status": "ok"}
+                            else:
+                                if session_is_empty(client_status['session_choices']):
+                                    await send_text(chat_id, "You have not selected any session. Please use the /choose_session command to select a session first.")
+                                    return {"status": "ok"}
+                                else:
+                                    await send_text(chat_id, "We have started looking for sessions for you. If you wish to make any changes, use the /choose_session commmand. The following are the sessions you have selected to choose from:")
+                                    await send_text(chat_id, generate_table(client_status['session_choices']))
+                                    clients.update_one({'_id': chat_id}, {'$set': {'checking': True}})
+                                    return {"status": "ok"}
+                    elif "/stop_checking" == update.message.text:
+                        if client_status['checking'] == False:
+                            await send_text(chat_id, "You are not in the queue for checking. Please use the /start_checking command to start checking for sessions.")
+                            return {"status": "ok"}
+                        else:
+                            await send_text(chat_id, "We have stopped looking for sessions for you.")
+                            clients.update_one({'_id': chat_id}, {'$set': {'checking': False}})
+                            return {"status": "ok"}
+                    elif "/help" == update.message.text:
+                        help_msg = "Use /start to get help."
+                        await send_text(chat_id, help_msg)
+                    elif "/booking_history" == update.message.text:
+                        if client_status['booking_history'] == [] or client_status['booking_history'] == None:
+                            await send_text(chat_id, "You have not booked any sessions yet.")
+                            return {"status": "ok"}
+                        else:
+                            await send_text(chat_id, "Here is your booking history:")
+                            await send_text(chat_id, generate_table_history(client_status['booking_history']))
+                            return {"status": "ok"}
+                    else: 
+                        await send_text(chat_id, "I am not sure what you mean 😅. Use the /start command to see what I can do for you.")
+
+                else:
+                    await send_text(chat_id, "Please enter a valid input.")
+            elif client_status['state']['major'] == 1:
+                if update.message and update.message.text == "/cancel":
+                    await send_text(chat_id, "Your current procedure has been cancelled.")
+                    await update_state_client(chat_id, 0, 0)
+                    await info_payload_reset(chat_id)
+                    return {"status": "ok"}
+                await setlogin_handler(chat_id, client_status, update)
+        elif chat_id == admin_id:
+            client_status = admin.find_one({'_id': chat_id})
+            if client_status['state']['major'] == 0:
+                if update.message:
+                    if "/user_group" in update.message.text:
+                        data = user_group_validator(update.message.text)
+                        if data == False:
+                            await send_text(chat_id, "Please enter in the correct format /user_group [user_id] [group_id]. Make sure the format for user and group is correct.")
+                            return {"status": "ok"}
+                        else:
+                            user_id, group_id = data[0], data[1]
+                            user_status = clients.find_one({'random_id': user_id})
+                            if user_status == None:
+                                await send_text(chat_id, "User does not exist.")
+                                return {"status": "ok"}
+                            else:
+                                clients.update_one({'random_id': user_id}, {'$set': {'group': group_id}})
+                                await send_text(chat_id, "User group "+user_id+"has been updated to "+group_id+".")
+                                return {"status": "ok"}
+                    elif "/cancel" == update.message.text:
+                        await send_text(chat_id, "Your current procedure has been cancelled.")
+                        await update_state_admin(chat_id, 0, 0)
+                        await info_payload_reset_admin(chat_id)
+                        return {"status": "ok"}
+                    elif "/wrong_login" in update.message.text:
+                        data = wrong_login_validator(update.message.text)
+                        if data == False:
+                            await send_text(chat_id, "Please enter in the correct format /wrong_login [user_id]")
+                            return {"status": "ok"}
+                        else:
+                            user_id = data
+                            user_status = clients.find_one({'random_id': user_id})
+                            if user_status == None:
+                                await send_text(chat_id, "User does not exist.")
+                                return {"status": "ok"}
+                            else:
+                                await send_text(user_status["_id"], "Our workers have detected that you have entered the wrong login details. Please use /setlogin to update your login details.")
+                                await send_text(chat_id, "User "+user_id+" has been notified.")
+                                return {"status": "ok"}
+                    elif "/top_up" in update.message.text:
+                        data = top_up_validator(update.message.text)
+                        if data == False:
+                            await send_text(chat_id, "Please enter in the correct format /top_up [user_id]")
+                            return {"status": "ok"}
+                        else:
+                            user_id = data
+                            user_status = clients.find_one({'random_id': user_id})
+                            if user_status == None:
+                                await send_text(chat_id, "User does not exist.")
+                                return {"status": "ok"}
+                            else:
+                                await send_text(user_status["_id"], "Our workers have detected that you have insufficient funds in your BBDC account. Please top it up!")
+                                await send_text(chat_id, "User "+user_id+" has been notified.")
+                                return {"status": "ok"}
+                    elif "/get_info" in update.message.text:
+                        data = get_info_validator(update.message.text)
+                        if data == False:
+                            await send_text(chat_id, "Please enter in the correct format /get_info [user_id]")
+                            return {"status": "ok"}
+                        else:
+                            user_id = data
+                            user_status = clients.find_one({'random_id': user_id})
+                            if user_status == None:
+                                await send_text(chat_id, "User does not exist.")
+                                return {"status": "ok"}
+                            else:
+                                client_status = clients.find_one({'random_id': user_id})
+                                text = ""
+                                client_status = clients.find_one({'random_id': user_id})
+                                text = f"<b>User ID:</b> {client_status['random_id']}\n"
+                                text += f"<b>Group:</b> {client_status['group']}\n"
+                                text += f"<b>Test date:</b> {client_status['test']}\n"
+                                text += f"<b>BBDC Username:</b> {client_status['username']}\n"
+                                text += f"<b>BBDC Password:</b> {client_status['password']}\n"
+                                text += f"<b>Credits:</b> {client_status['credits']}\n"
+                                text += f"<b>Phone number:</b> {client_status['phone']}\n"
+                                text += f"<b>Type:</b> {'Automatic' if client_status['type'] else 'Manual'}\n"
+                                text += f"<b>Checking:</b> {'Yes' if client_status['checking'] else 'No'}\n"
+                                await send_text(chat_id, text)
+                                return {"status": "ok"}
+                    elif "/user_test" in update.message.text:
+                        data = user_test_validator(update.message.text)
+                        if data == False:
+                            await send_text(chat_id, "Please enter in the correct format /user_group [user_id] [group_id]. Make sure the format for user and group is correct.")
+                            return {"status": "ok"}
+                        else:
+                            user_id, test = data[0], data[1]
+                            user_status = clients.find_one({'random_id': user_id})
+                            if user_status == None:
+                                await send_text(chat_id, "User does not exist.")
+                                return {"status": "ok"}
+                            else:
+                                clients.update_one({'random_id': user_id}, {'$set': {'test': test}})
+                                await send_text(chat_id, "User test "+user_id+"has been updated to "+test+".")
+                                return {"status": "ok"}
+
+# You can use the "text" variable to send the Telegram message
+
+                                    
+        else: # Create a new user in clients
+            first_char = str(random.randint(0, 9))
+            second_char = random.choice(string.ascii_uppercase)
+            third_char = str(random.randint(0, 9))
+            fourth_char = random.choice(string.ascii_uppercase)
+            random_id = f"{first_char}{second_char}{third_char}{fourth_char}"
+            new_user = {
+                "_id": int(chat_id),  # Telegram ID (INT)
+                "random_id": random_id,  # Random User ID (STR)
+                "group": "",  # The person’s group ID(STR)
+                "test": None,  # The person’s test date (Date)
+                "username": "",  # BBDC Username of the individual (STR)
+                "password": "",  # BBDC Password of the individual (STR)
+                "credits": 0, # The amount of credits the user has (INT)
+                "phone": "",  # The person’s phone number (STR)
+                "topup_history": [],  # A document containing the top up history of the fellow users (Documents)
+                "credits_used": 0,  # The total number of credits the user has used (FLOAT)
+                "session_choices": [],  # A document containing all the session choices they have (Documents)
+                "booking_history": [],  # A document containing all the bookings we have done for them (Documents)
+                "state": {"major": 0, "minor": 0},  # State of each user in the document flow (Document)
+                "info_payload": {},  # Contain all the information relevant to the current procedure (Document)
+                "checking": False,  # Checking if a person is checking for new time slots (Boolean)
+                "type": True  # True is Automatic, False is Manual (BOOLEAN)
+            }
+            clients.insert_one(new_user)
+            await send_text(chat_id, msg1)
+        return {"status": "ok"}
+    except Exception as e:
+        print(e)
+        print("Exception occurred on line:", e.__traceback__.tb_lineno)
+        traceback.print_exc()
+        return {"status": "ok"}
+    
+
+@app.post("/stripe")
+async def webhook_received(request: Request, stripe_signature: str = Header(None)):
+    data = await request.body()
+    try:
+        event = stripe.Webhook.construct_event(
+            payload=data,
+            sig_header=stripe_signature,
+            secret=webhook_secret
+        )
+        event_data = event['data']
+    except Exception as e:
+        print(e)
+        return {"error": str(e)}
+    amount = event_data['object']['amount_total']/100
+    client_reference_id = event_data['object']['client_reference_id']
+    stripe_id = event_data['object']['id']
+    time = event_data["object"]["created"]
+    await top_up(amount, client_reference_id, stripe_id, time)
+    return {"status": "success"}
+
+
+@app.post("/form")
+async def form(request: Request):
+    data = await request.form()
+    form_data = json.dumps(dict(data))
+    form_data = json.loads(form_data)
+    user_id = form_data['id']
+    sessions = {}
+    for key in form_data:
+        # Check if the key represents a session
+        if key.startswith('20'):
+            # Extract the date and session number from the key
+            date, session = key.split('+')
+            session_num = int(session.split('_')[1])
+            
+            # Add the session number to the appropriate list in the sessions dictionary
+            if date in sessions:
+                sessions[date].append(session_num)
+            else:
+                sessions[date] = [session_num]
+    await update_session_choices(user_id, sessions)
+    table = generate_table(sessions)
+    print(user_id)
+    telegram_id = clients.find_one({'random_id': user_id})['_id']
+    await send_text(telegram_id, "Your sessions have been successfully updated! You may go to https://bbdcbot.s3.ap-southeast-1.amazonaws.com/index.html?id="+user_id+"  to update your availible lesson timings again!\nHere's a summary of your currently selected sessions:\n"+table)
+    await send_text(telegram_id, "You can use /start_checking command next and bot will inform you when a session has been reserved for you.")
+    clients.update_one({'random_id': user_id}, {'$set': {'checking': False}})
+    return "Your sessions have been successfully updated! Please head back to the telegram bot :)"
+
+
+
+@app.get("/obtain_session/{id}")
+async def obtain_session(id: str):
+    client = clients.find_one({'random_id': id})
+    if client:
+        return client['session_choices']
+    else:
+        return {"status": "error", "message": "Invalid ID"}
+    
