@@ -460,7 +460,6 @@ async def echo(request: Request):
                                 await send_text(chat_id, "User does not exist.")
                                 return {"status": "ok"}
                             else:
-                                client_status = clients.find_one({'random_id': user_id})
                                 text = ""
                                 client_status = clients.find_one({'random_id': user_id})
                                 text = f"<b>User ID:</b> {client_status['random_id']}\n"
@@ -473,6 +472,8 @@ async def echo(request: Request):
                                 text += f"<b>Type:</b> {'Automatic' if client_status['type'] else 'Manual'}\n"
                                 text += f"<b>Checking:</b> {'Yes' if client_status['checking'] else 'No'}\n"
                                 await send_text(chat_id, text)
+                                table = generate_table(client_status['session_choices'])
+                                await send_text(chat_id, table)
                                 return {"status": "ok"}
                     elif "/user_test" in update.message.text:
                         data = user_test_validator(update.message.text)
@@ -489,6 +490,9 @@ async def echo(request: Request):
                                 clients.update_one({'random_id': user_id}, {'$set': {'test': test}})
                                 await send_text(chat_id, "User test "+user_id+"has been updated to "+test+".")
                                 return {"status": "ok"}
+                    elif "/book_slot" in update.message.text:
+                        data = book_slot_validator(update.message.text)
+                        print(data)
 
 # You can use the "text" variable to send the Telegram message
 
@@ -510,7 +514,7 @@ async def echo(request: Request):
                 "phone": "",  # The person’s phone number (STR)
                 "topup_history": [],  # A document containing the top up history of the fellow users (Documents)
                 "credits_used": 0,  # The total number of credits the user has used (FLOAT)
-                "session_choices": [],  # A document containing all the session choices they have (Documents)
+                "session_choices": {},  # A document containing all the session choices they have (Documents)
                 "booking_history": [],  # A document containing all the bookings we have done for them (Documents)
                 "state": {"major": 0, "minor": 0},  # State of each user in the document flow (Document)
                 "info_payload": {},  # Contain all the information relevant to the current procedure (Document)
