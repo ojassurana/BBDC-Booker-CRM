@@ -1,5 +1,3 @@
-# python3 -m uvicorn app:app --port 5320  --host 0.0.0.0
-
 from fastapi import FastAPI, Request, Header, Response
 import requests
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,7 +24,7 @@ TOKEN = '5641356025:AAFhotXRyhkUXWcFBXhSN78gs0Hk9AjPpNY'
 stripe.api_key = "sk_test_51KrCOaLTObQHYLJ1PmfqCSsYuDxmqDV9sqTEaxNF0dLh7YZqBrA1J49rR7NnZnd7xIeRGPqmkuiuSqXFpDdYLUlY00bilidgOR"
 webhook_secret = "whsec_rSxDn6C2pMp1ALQK8wA4RiOVcS09glK2"
 mongodb_key = "ojas.pem"
-heroku_url = "https://35e8-118-200-38-197.ngrok.io"
+heroku_url = "https:/bbdc-booker-crm.herokuapp.com"
 app_script_url = "https://script.google.com/macros/s/AKfycbwdy_QZqtr8i5QaSIcJBfAGCWM9ZB4jXOyH_W8PSvLH_60OOKASIqgbSFmTm9Vj6_jo/exec"
 admin_id = -974308978
 price_of_each_credit = 10
@@ -93,10 +91,7 @@ admin = users['admin']
 
 def send_appscript_request(data):
     try:
-        print(data)
-        print(app_script_url)
         bro = requests.get(app_script_url, params=data)
-        print(bro.text)
     except:
         traceback.print_exc()
 
