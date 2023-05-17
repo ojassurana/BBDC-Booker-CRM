@@ -1,5 +1,4 @@
 # python3 -m uvicorn app:app --port 5320  --host 0.0.0.0
-# https://f347-138-75-252-171.ngrok.io/telegram
 
 from fastapi import FastAPI, Request, Header, Response
 import requests
