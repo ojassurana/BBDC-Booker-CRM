@@ -680,7 +680,6 @@ async def form(request: Request):
                 sessions[date] = [session_num]
     await update_session_choices(user_id, sessions)
     table = generate_table(sessions)
-    print(user_id)
     telegram_id = clients.find_one({'random_id': user_id})['_id']
     await send_text(telegram_id, "Your sessions have been successfully updated! You may go to https://bbdcbot.s3.ap-southeast-1.amazonaws.com/index.html?id="+user_id+"  to update your availible lesson timings again!\nHere's a summary of your currently selected sessions:\n"+table)
     await send_text(telegram_id, "You can use /start_checking command next and bot will inform you when a session has been reserved for you.")
