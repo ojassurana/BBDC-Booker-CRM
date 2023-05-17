@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request, Header, Response
+import os
 import requests
 from fastapi.middleware.cors import CORSMiddleware
 from telegram import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
@@ -20,18 +21,18 @@ global msg1
 
 
 # API Keys: ___________________________________________________________________________________________________________
-TOKEN = '5641356025:AAFhotXRyhkUXWcFBXhSN78gs0Hk9AjPpNY'
-stripe.api_key = "sk_test_51KrCOaLTObQHYLJ1PmfqCSsYuDxmqDV9sqTEaxNF0dLh7YZqBrA1J49rR7NnZnd7xIeRGPqmkuiuSqXFpDdYLUlY00bilidgOR"
-webhook_secret = "whsec_rSxDn6C2pMp1ALQK8wA4RiOVcS09glK2"
+TOKEN = os.environ["TOKEN"]
+stripe.api_key = os.environ["stripe_api_key"]
+webhook_secret = os.environ["webhook_secret"]
 mongodb_key = "ojas.pem"
 heroku_url = "https:/bbdc-booker-crm.herokuapp.com"
-app_script_url = "https://script.google.com/macros/s/AKfycbwdy_QZqtr8i5QaSIcJBfAGCWM9ZB4jXOyH_W8PSvLH_60OOKASIqgbSFmTm9Vj6_jo/exec"
-admin_id = -974308978
+app_script_url = os.environ["app_script_url"]
+admin_id = str(os.environ['admin_id'])
 price_of_each_credit = 10
 # Client: ____________________________________________________________________________________________________________  
 bot = telegram.Bot(TOKEN)
 app = FastAPI()
-uri = "mongodb+srv://cluster0.mqlx5ut.mongodb.net/?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority"
+uri = os.environ['mongo_url']
 mongo = MongoClient(uri,
                      tls=True,
                      tlsCertificateKeyFile='ojas.pem')
