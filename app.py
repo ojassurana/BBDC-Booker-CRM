@@ -661,30 +661,30 @@ async def webhook_received(request: Request, stripe_signature: str = Header(None
 
 @app.post("/form")
 async def form(request: Request):
-    data = await request.form()
-    form_data = json.dumps(dict(data))
-    form_data = json.loads(form_data)
-    user_id = form_data['id']
-    sessions = {}
-    for key in form_data:
-        # Check if the key represents a session
-        if key.startswith('20'):
-            # Extract the date and session number from the key
-            date, session = key.split('+')
-            session_num = int(session.split('_')[1])
+    # data = await request.form()
+    # form_data = json.dumps(dict(data))
+    # form_data = json.loads(form_data)
+    # user_id = form_data['id']
+    # sessions = {}
+    # for key in form_data:
+    #     # Check if the key represents a session
+    #     if key.startswith('20'):
+    #         # Extract the date and session number from the key
+    #         date, session = key.split('+')
+    #         session_num = int(session.split('_')[1])
             
-            # Add the session number to the appropriate list in the sessions dictionary
-            if date in sessions:
-                sessions[date].append(session_num)
-            else:
-                sessions[date] = [session_num]
-    await update_session_choices(user_id, sessions)
-    table = generate_table(sessions)
-    print(user_id)
-    telegram_id = clients.find_one({'random_id': user_id})['_id']
-    await send_text(telegram_id, "Your sessions have been successfully updated! You may go to https://bbdcbot.s3.ap-southeast-1.amazonaws.com/index.html?id="+user_id+"  to update your availible lesson timings again!\nHere's a summary of your currently selected sessions:\n"+table)
-    await send_text(telegram_id, "You can use /start_checking command next and bot will inform you when a session has been reserved for you.")
-    clients.update_one({'random_id': user_id}, {'$set': {'checking': False}})
+    #         # Add the session number to the appropriate list in the sessions dictionary
+    #         if date in sessions:
+    #             sessions[date].append(session_num)
+    #         else:
+    #             sessions[date] = [session_num]
+    # await update_session_choices(user_id, sessions)
+    # table = generate_table(sessions)
+    # print(user_id)
+    # telegram_id = clients.find_one({'random_id': user_id})['_id']
+    # await send_text(telegram_id, "Your sessions have been successfully updated! You may go to https://bbdcbot.s3.ap-southeast-1.amazonaws.com/index.html?id="+user_id+"  to update your availible lesson timings again!\nHere's a summary of your currently selected sessions:\n"+table)
+    # await send_text(telegram_id, "You can use /start_checking command next and bot will inform you when a session has been reserved for you.")
+    # clients.update_one({'random_id': user_id}, {'$set': {'checking': False}})
     return "Your sessions have been successfully updated! Please head back to the telegram bot :)"
 
 
