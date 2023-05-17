@@ -3,3 +3,5 @@ requests
 python-telegram-bot
 stripe
 pymongo
+gunicorn
+uvicorn
