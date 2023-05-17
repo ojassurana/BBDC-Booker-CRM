@@ -27,7 +27,7 @@ webhook_secret = os.environ["webhook_secret"]
 mongodb_key = "ojas.pem"
 heroku_url = "https:/bbdc-booker-crm.herokuapp.com"
 app_script_url = os.environ["app_script_url"]
-admin_id = str(os.environ['admin_id'])
+admin_id = int(os.environ['admin_id'])
 price_of_each_credit = 10
 # Client: ____________________________________________________________________________________________________________  
 bot = telegram.Bot(TOKEN)
