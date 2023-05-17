@@ -586,6 +586,8 @@ async def echo(request: Request):
                                 session_choices = user_status['session_choices']
                                 date = datetime.strptime(date, '%d-%m-%y').strftime('%Y-%m-%d')
                                 session_choices[date].remove(slot)
+                                if session_choices[date] == []:
+                                    session_choices.pop(date)
                                 clients.update_one({'random_id': user_id}, {'$set': {'session_choices': session_choices}})
                                 clients.update_one({'random_id': user_id}, {'$inc': {'credits': -1}})
                                 clients.update_one({'random_id': user_id}, {'$inc': {'credits_used': 1}})
@@ -599,7 +601,6 @@ async def echo(request: Request):
                                 user_message_confirmation += "Please use /start_checking command AGAIN to start checking for the slot.\n"
                                 clients.update_one({'random_id': user_id}, {'$set': {'checking': False}})
                                 if clients.find_one({'random_id': user_id})['credits'] == 0:
-                                    message_confirmation += f"User {user_id} has no more credits left. User has been removed from checking."
                                     user_message_confirmation += "You have no more credits left. Kindly please add more credits using the /credits command"
                                 await send_text(chat_id, message_confirmation)
                                 await send_text(user_status["_id"], user_message_confirmation)
