@@ -2,10 +2,12 @@
 # https://f347-138-75-252-171.ngrok.io/telegram
 
 from fastapi import FastAPI, Request, Header, Response
+import requests
 from fastapi.middleware.cors import CORSMiddleware
 from telegram import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List
+import time
 import telegram
 from telegram import constants
 import stripe
@@ -26,7 +28,9 @@ stripe.api_key = "sk_test_51KrCOaLTObQHYLJ1PmfqCSsYuDxmqDV9sqTEaxNF0dLh7YZqBrA1J
 webhook_secret = "whsec_rSxDn6C2pMp1ALQK8wA4RiOVcS09glK2"
 mongodb_key = "ojas.pem"
 heroku_url = "https://35e8-118-200-38-197.ngrok.io"
+app_script_url = "https://script.google.com/macros/s/AKfycbwdy_QZqtr8i5QaSIcJBfAGCWM9ZB4jXOyH_W8PSvLH_60OOKASIqgbSFmTm9Vj6_jo/exec"
 admin_id = -974308978
+price_of_each_credit = 10
 # Client: ____________________________________________________________________________________________________________  
 bot = telegram.Bot(TOKEN)
 app = FastAPI()
@@ -87,6 +91,44 @@ users = mongo['Users']
 clients = users['clients']
 admin = users['admin']
 
+
+def send_appscript_request(data):
+    try:
+        print(data)
+        print(app_script_url)
+        bro = requests.get(app_script_url, params=data)
+        print(bro.text)
+    except:
+        traceback.print_exc()
+
+
+def slot_checker(session_choice, slot, date):
+    session_timings = {
+    1: '0730',
+    2: '0920',
+    3: '1130',
+    4: '1320',
+    5: '1520',
+    6: '1710',
+    7: '1920',
+    8: '2110'
+    }
+    today = datetime.today().strftime('%d-%m-%y')
+    date = datetime.strptime(date, '%d-%m-%y').strftime('%Y-%m-%d')
+    if date not in session_choice:
+        return False 
+    if int(slot) not in session_choice[date]:
+        return False
+    session_timing = datetime.strptime(session_timings[int(slot)], '%H%M')
+    timing_before = (session_timing - timedelta(hours=2, minutes=30)).time()
+    today = datetime.today().date()
+    current_time = datetime.now().time() 
+    date = datetime.strptime(date, '%Y-%m-%d').date()
+    if date == today and current_time > timing_before:
+        return False
+    return True
+
+
 def get_info_validator(input_str):
     input_list = input_str.strip().split()
     if len(input_list) != 2:
@@ -102,6 +144,28 @@ def get_info_validator(input_str):
 
 async def update_state_admin(chat_id, major, minor):
     admin.update_one({"_id": chat_id}, {"$set": {"state.major": major, "state.minor": minor}})
+
+
+def book_slot_validator(input_str):
+    input_list = input_str.strip().split(" ")
+    if len(input_list) != 4:
+        return False
+    command, user_id, slot, date = input_list
+    if command != "/book_slot":
+        return
+    if len(user_id) != 4:
+        return False
+    if slot.isdigit() == False:
+        return False
+    if int(slot)>8 or int(slot)<1:
+        return False
+    try:
+        datetime.strptime(date, '%d-%m-%y')
+    except:
+        return False
+    return [user_id, slot, date]
+     
+
 
 
 def top_up_validator(input_str):
@@ -169,7 +233,7 @@ def session_is_empty(session_choices):
     if session_choices == {} or session_choices == None or session_choices == []: 
         return True
     for date, sessions in session_choices.items():
-        if date >= datetime.datetime.now().strftime("%Y-%m-%d"):
+        if date >= datetime.now().strftime("%Y-%m-%d"):
             return False
     return True
 
@@ -207,7 +271,6 @@ def generate_table(data_dict):
 
 
 async def top_up(amount, client_reference_id, stripe_id, time):
-    price_of_each_credit = 10
     credits = amount/price_of_each_credit
     to_add = {"amount": amount, "stripe_id": stripe_id, "time": time, "credits": credits}
     clients.update_one({"random_id": client_reference_id}, {"$push": {"topup_history":  to_add}})
@@ -298,6 +361,7 @@ async def setlogin_handler(chat_id, client_status, update):
         await bot.send_message(chat_id=update.message.chat_id, text="Your BBDC username and password has been updated!", reply_markup=ReplyKeyboardRemove())
         if client_status["group"] == "": # Yet to set the group
             await send_text(admin_id, "A new user has been added to the database.\n<b>Database ID is:</b> " + client_status['random_id'])
+        send_appscript_request({'method': "setLogin", 'username': info_payload['username'], 'password': info_payload['password'], 'type': info_payload["type"], 'phone': update.message.contact.phone_number, "id": client_status['random_id']})
     else:
         await send_text(chat_id, "Please enter a valid input")
 
@@ -412,6 +476,7 @@ async def echo(request: Request):
                             else:
                                 clients.update_one({'random_id': user_id}, {'$set': {'group': group_id}})
                                 await send_text(chat_id, "User group "+user_id+"has been updated to "+group_id+".")
+                                send_appscript_request({"id": user_id, "group": group_id, "method": "userGroup"})
                                 return {"status": "ok"}
                     elif "/cancel" == update.message.text:
                         await send_text(chat_id, "Your current procedure has been cancelled.")
@@ -430,7 +495,7 @@ async def echo(request: Request):
                                 await send_text(chat_id, "User does not exist.")
                                 return {"status": "ok"}
                             else:
-                                await send_text(user_status["_id"], "Our workers have detected that you have entered the wrong login details. Please use /setlogin to update your login details.")
+                                await send_text(user_status["_id"], "Our team has detected that you have entered the wrong login details. Please use /setlogin to update your login details.")
                                 await send_text(chat_id, "User "+user_id+" has been notified.")
                                 return {"status": "ok"}
                     elif "/top_up" in update.message.text:
@@ -478,7 +543,7 @@ async def echo(request: Request):
                     elif "/user_test" in update.message.text:
                         data = user_test_validator(update.message.text)
                         if data == False:
-                            await send_text(chat_id, "Please enter in the correct format /user_group [user_id] [group_id]. Make sure the format for user and group is correct.")
+                            await send_text(chat_id, "Please enter in the correct format /user_test [user_id] [test_date]. Make sure the format for user and group is correct.")
                             return {"status": "ok"}
                         else:
                             user_id, test = data[0], data[1]
@@ -488,15 +553,62 @@ async def echo(request: Request):
                                 return {"status": "ok"}
                             else:
                                 clients.update_one({'random_id': user_id}, {'$set': {'test': test}})
-                                await send_text(chat_id, "User test "+user_id+"has been updated to "+test+".")
+                                await send_text(chat_id, "User test "+user_id+" has been updated to "+test+".")
+                                send_appscript_request({"method": "userTest", "id": user_id, "test": test})
                                 return {"status": "ok"}
                     elif "/book_slot" in update.message.text:
                         data = book_slot_validator(update.message.text)
-                        print(data)
-
-# You can use the "text" variable to send the Telegram message
-
-                                    
+                        if data == False:
+                            await send_text(chat_id, "Please enter in the correct format /book_slot [user_id] [slot_number 1 to 8] [DD-MM-YY].\nMake sure the format for user and group is correct.")
+                            return {"status": "ok"}
+                        else:
+                            user_id, slot, date = data[0], data[1], data[2]
+                            user_status = clients.find_one({'random_id': user_id})
+                            if user_status == None:
+                                await send_text(chat_id, "User does not exist.")
+                                return {"status": "ok"}
+                            else:
+                                # Check if the user is on checking
+                                if user_status['checking'] == False:
+                                    await send_text(chat_id, "User is not on checking.")
+                                    return {"status": "ok"}
+                                # Check if the slot is one of the selected slot by the user and the timing of the slot is atleast 2.5 hours away
+                                session_choice = user_status['session_choices']
+                                if slot_checker(session_choice, slot, date) == False:
+                                    await send_text(chat_id, "Slot is not one of the selected slot by the user or the timing of the slot is not atleast 2.5 hours away.")
+                                    return {"status": "ok"}
+                                slot = int(slot)
+                                first_char = random.choice(string.ascii_uppercase)
+                                second_char = str(random.randint(0, 9))
+                                third_char = random.choice(string.ascii_uppercase)
+                                fourth_char = str(random.randint(0, 9))
+                                booking_id = f"{first_char}{second_char}{third_char}{fourth_char}"
+                                message_confirmation = ""
+                                message_confirmation += f"Booking ID: {booking_id}\n"
+                                message_confirmation += f"User ID: {user_id}\n"
+                                message_confirmation += f"Slot: {slot}\n"
+                                message_confirmation += f"Date: {date}\n"
+                                session_choices = user_status['session_choices']
+                                date = datetime.strptime(date, '%d-%m-%y').strftime('%Y-%m-%d')
+                                session_choices[date].remove(slot)
+                                clients.update_one({'random_id': user_id}, {'$set': {'session_choices': session_choices}})
+                                clients.update_one({'random_id': user_id}, {'$inc': {'credits': -1}})
+                                clients.update_one({'random_id': user_id}, {'$inc': {'credits_used': 1}})
+                                booking = {"booking_id": booking_id, "user_id": user_id, "slot": slot, "date": date, "time": time.time()}
+                                # Add the booking to booking_history document of the user_id and also to the booking_history document
+                                clients.update_one({'random_id': user_id}, {'$push': {'booking_history': booking}})
+                                user_message_confirmation = "" # This is the message for the user itself
+                                user_message_confirmation += f"Booking ID: {booking_id}\n"
+                                user_message_confirmation += f"Slot: {slot}\n"
+                                user_message_confirmation += f"Date: {date}\n"
+                                user_message_confirmation += "Please use /start_checking command AGAIN to start checking for the slot.\n"
+                                clients.update_one({'random_id': user_id}, {'$set': {'checking': False}})
+                                if clients.find_one({'random_id': user_id})['credits'] == 0:
+                                    message_confirmation += f"User {user_id} has no more credits left. User has been removed from checking."
+                                    user_message_confirmation += "You have no more credits left. Kindly please add more credits using the /credits command"
+                                await send_text(chat_id, message_confirmation)
+                                await send_text(user_status["_id"], user_message_confirmation)
+                                return {"status": "ok"}                                 
         else: # Create a new user in clients
             first_char = str(random.randint(0, 9))
             second_char = random.choice(string.ascii_uppercase)
@@ -589,4 +701,65 @@ async def obtain_session(id: str):
         return client['session_choices']
     else:
         return {"status": "error", "message": "Invalid ID"}
-    
+
+
+
+@app.get("/daily_updater")
+def get_data():
+    documents = clients.find({'type': "3", "checking": True})
+    result = {}
+    current_date = datetime.now().date()
+    for document in documents:
+        if document['type'] == "3":
+            session_choices = document['session_choices']
+            for date, numbers in session_choices.items():
+                # Convert the date string to a datetime object
+                date_obj = datetime.strptime(date, '%Y-%m-%d').date()
+                # Ignore dates from the previous day or before
+                if date_obj < current_date:
+                    continue
+                # Format the date as "DD-MM-YY"
+                formatted_date = date_obj.strftime('%d-%m-%y')
+                # Add the numbers to the corresponding date in the result dictionary
+                result.setdefault(formatted_date, {})
+                for number in range(1, 9):  # Include numbers 1 to 8 by default
+                    result[formatted_date].setdefault(number, [])
+                for number in numbers:
+                    result[formatted_date].setdefault(number, []).append(document['random_id'])
+                # Add missing dates as empty dictionaries
+                date_delta = date_obj - current_date
+                for i in range(1, date_delta.days):
+                    missing_date = (current_date + timedelta(days=i)).strftime('%d-%m-%y')
+                    result.setdefault(missing_date, {})
+                    for number in range(1, 9):  # Include numbers 1 to 8 by default
+                        result[missing_date].setdefault(number, [])
+    sorted_result = {date: result[date] for date in sorted(result)}
+    documents = clients.find({'type': "3A", "checking": True})
+    result = {}
+    current_date = datetime.now().date()
+    for document in documents:
+        if document['type'] == "3A":
+            session_choices = document['session_choices']
+            for date, numbers in session_choices.items():
+                # Convert the date string to a datetime object
+                date_obj = datetime.strptime(date, '%Y-%m-%d').date()
+                # Ignore dates from the previous day or before
+                if date_obj < current_date:
+                    continue
+                # Format the date as "DD-MM-YY"
+                formatted_date = date_obj.strftime('%d-%m-%y')
+                # Add the numbers to the corresponding date in the result dictionary
+                result.setdefault(formatted_date, {})
+                for number in range(1, 9):  # Include numbers 1 to 8 by default
+                    result[formatted_date].setdefault(number, [])
+                for number in numbers:
+                    result[formatted_date].setdefault(number, []).append(document['random_id'])
+                # Add missing dates as empty dictionaries
+                date_delta = date_obj - current_date
+                for i in range(1, date_delta.days):
+                    missing_date = (current_date + timedelta(days=i)).strftime('%d-%m-%y')
+                    result.setdefault(missing_date, {})
+                    for number in range(1, 9):  # Include numbers 1 to 8 by default
+                        result[missing_date].setdefault(number, [])
+    sorted_result_a = {date: result[date] for date in sorted(result)}
+    return {"3": sorted_result, "3A": sorted_result_a}

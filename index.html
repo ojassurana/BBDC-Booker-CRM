@@ -90,7 +90,7 @@
       const urlParams = new URLSearchParams(window.location.search);
       const id = urlParams.get('id');
       var ok;
-      fetch(`https://f9cd-138-75-252-171.ngrok.io/obtain_session/${id}`)
+      fetch(`https://c56f-138-75-252-171.ngrok.io/obtain_session/${id}`)
       .then(response => response.json()) // Extract JSON response
       .then(data => {
       ok = data; // Save data into the `ok` variable
@@ -187,7 +187,7 @@ function formatDate(date) {
   </script>
 </head>
 <body onload="generateTable()">
-    <form action="https://f9cd-138-75-252-171.ngrok.io/form" method="POST">
+    <form action="https://c56f-138-75-252-171.ngrok.io/form" method="POST">
         <input type="hidden" name="id" id="id">
         <table id="session-table">
         </table>
