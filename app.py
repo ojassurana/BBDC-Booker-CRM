@@ -120,6 +120,7 @@ def slot_checker(session_choice, slot, date):
     current_time = datetime.now().time() 
     date = datetime.strptime(date, '%Y-%m-%d').date()
     if date == today and current_time > timing_before:
+        print(current_time, timing_before)
         return False
     return True
 
@@ -401,7 +402,7 @@ async def echo(request: Request):
                     elif "/choose_session" == update.message.text:
                         # checks if client has credits
                         if client_status['credits'] < 1:
-                            await send_text(chat_id, "You do not have enough credits to book a session. Please top up your credits using the /credits command first") 
+                            await send_text(chat_id, "⚠️ You do not have enough credits to book a session. Please top up your credits using the /credits command first") 
                             return {"status": "ok"}
                         else:
                             await send_text(chat_id, "Click on the following link to let us know your availible timings:\n  <a href='https://bbdcbot.s3.ap-southeast-1.amazonaws.com/index.html?id="+client_status['random_id']+"'>Click Here</a>")
@@ -412,7 +413,7 @@ async def echo(request: Request):
                             return {"status": "ok"}
                         else:
                             if client_status['credits'] < 1:
-                                await send_text(chat_id, "You do not have enough credits to book a session. Please top up your credits using the /credits command first") 
+                                await send_text(chat_id, "⚠️ You do not have enough credits to book a session. Please top up your credits using the /credits command first") 
                                 return {"status": "ok"}
                             else:
                                 if session_is_empty(client_status['session_choices']):
