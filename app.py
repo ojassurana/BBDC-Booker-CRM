@@ -119,8 +119,7 @@ def slot_checker(session_choice, slot, date):
     today = datetime.today().date()
     current_time = datetime.now().time() 
     date = datetime.strptime(date, '%Y-%m-%d').date()
-    if date == today and current_time > timing_before:
-        print(current_time, timing_before)
+    if date == today:
         return False
     return True
 
