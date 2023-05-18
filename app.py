@@ -572,7 +572,7 @@ async def echo(request: Request):
                                     return {"status": "ok"}
                                 # Check if the slot is one of the selected slot by the user and the timing of the slot is atleast 2.5 hours away
                                 session_choice = user_status['session_choices']
-                                if slot_checker(session_choice, slot, date) == False:
+                                if await slot_checker(session_choice, slot, date) == False:
                                     await send_text(chat_id, "Slot is not one of the selected slot by the user or the timing of the slot is not atleast 2.5 hours away.")
                                     return {"status": "ok"}
                                 slot = int(slot)
