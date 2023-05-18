@@ -235,6 +235,7 @@ def session_is_empty(session_choices):
 
 
 def generate_table_history(booking_history):
+    output = ""
     for document in booking_history:
         date = document["date"]
         session = document["slot"]
