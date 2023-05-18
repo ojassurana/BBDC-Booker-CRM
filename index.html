@@ -125,22 +125,34 @@
       }
 
       // Add table body rows
-      for (var j = 1; j <= 8; j++) {
-        var today = new Date();
-        var bodyRow = table.insertRow();
-        var sessionCell = bodyRow.insertCell();
-        sessionCell.innerHTML = "Session " + j;
-        for (var i = 0; i < 60; i++) {
-          var date = formatDateCheckbox(today);
-          var checkboxName = date + "+session_" + j;
-          var checkboxCell = bodyRow.insertCell();
-          var checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-          checkbox.name = checkboxName;
-          checkboxCell.appendChild(checkbox);
-          today.setDate(today.getDate() + 1);
-        }
-      }
+      var timings = {
+  1: "07:30-09:10",
+  2: "09:20-11:00",
+  3: "11:30-13:10",
+  4: "13:20-15:30",
+  5: "15:20-17:00",
+  6: "17:10-18:50",
+  7: "19:20-21:00",
+  8: "21:10-22:50"
+};
+
+for (var j = 1; j <= 8; j++) {
+  var today = new Date();
+  var bodyRow = table.insertRow();
+  var sessionCell = bodyRow.insertCell();
+  sessionCell.innerHTML = timings[j];  // Update the innerHTML with the corresponding time range
+  for (var i = 0; i < 60; i++) {
+    var date = formatDateCheckbox(today);
+    var checkboxName = date + "+session_" + j;
+    var checkboxCell = bodyRow.insertCell();
+    var checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.name = checkboxName;
+    checkboxCell.appendChild(checkbox);
+    today.setDate(today.getDate() + 1);
+  }
+}
+
 }
 
 
