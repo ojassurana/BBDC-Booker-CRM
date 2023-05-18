@@ -66,7 +66,6 @@ See /credits command for more information.
 In case there are any issues, we will contact you immediately on WhatsApp.
 ⚠️ <b>Remember to keep your BBDC Balance TOPPED UP or we will be unable to book slots for you</b>
 '''
-msg2 = "You may use the /help command to find out more."
 msg3 = '''
 <b><u>Your bot credits:</u></b>
 Available Credits: {credits}
@@ -382,7 +381,6 @@ async def echo(request: Request):
                 if update.message:
                     if "/start" == update.message.text :
                         await send_text(chat_id, msg1)
-                        await send_text(chat_id, msg2)
                     elif "/setlogin" == update.message.text:
                         await send_text(chat_id, "Please enter your BBDC username:")
                         await update_state_client(chat_id, 1, 1)
@@ -434,8 +432,8 @@ async def echo(request: Request):
                             await send_text(chat_id, "We have stopped looking for sessions for you. Please use /start_checking again to book sessions.")
                             clients.update_one({'_id': chat_id}, {'$set': {'checking': False}})
                             return {"status": "ok"}
-                    elif "/help" == update.message.text:
-                        help_msg = "Use /start to get help."
+                    elif "/contact" == update.message.text:
+                        help_msg = "Please contact @ojasx for customer support/suggestions."
                         await send_text(chat_id, help_msg)
                     elif "/booking_history" == update.message.text:
                         if client_status['booking_history'] == [] or client_status['booking_history'] == None:
