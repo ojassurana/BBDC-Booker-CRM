@@ -239,7 +239,8 @@ def generate_table_history(booking_history):
     for document in booking_history:
         date = document["date"]
         session = document["slot"]
-        output += f"<b>Date: </b>{date}\n<b>Session Number:</b>{session}\n--------------------------------\n"
+        booking_id = document["booking_id"]
+        output += f"<b>Date: </b>{date}\n<b>Session Number:</b>{session}\n<b>Booking ID:</b> {booking_id}\n-------\n"
     return output
 
 
