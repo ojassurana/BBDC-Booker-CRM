@@ -537,7 +537,6 @@ async def echo(request: Request):
                                 await send_text(chat_id, text)
                                 table = generate_table(client_status['session_choices'])
                                 await send_text(chat_id, table)
-                                await bot.send_photo(chat_id=chat_id, photo="https://bbdcbot.s3.ap-southeast-1.amazonaws.com/Timings.png", caption="Please note the timings of each session.")
                                 return {"status": "ok"}
                     elif "/user_test" in update.message.text:
                         data = user_test_validator(update.message.text)
@@ -687,7 +686,6 @@ async def form(request: Request):
     table = generate_table(sessions)
     telegram_id = clients.find_one({'random_id': user_id})['_id']
     await send_text(telegram_id, "Your sessions have been successful updated! If you wish to update the slots you are free for, use /choose_session again to update you availible timings if you want. Here's a summary of your currently selected sessions:\n"+table)
-    await bot.send_photo(chat_id=telegram_id, photo="https://bbdcbot.s3.ap-southeast-1.amazonaws.com/Timings.png", caption="Please note the timings of each session.")
     await send_text(telegram_id, "⚠️ Please use /start_checking command next and bot will inform you when a session has been reserved for you by our team. ⚠️")
     clients.update_one({'random_id': user_id}, {'$set': {'checking': False}})
     html_content = """
