@@ -309,7 +309,7 @@ async def update_session_choices(user_id, sessions):
 
 
 async def send_text(chat_id, message_text):
-    await bot.send_message(chat_id, message_text, parse_mode=telegram.constants.ParseMode.HTML)
+    await bot.send_message(chat_id, message_text, parse_mode=telegram.constants.ParseMode.HTML, disable_web_page_preview=True)
 
 
 
