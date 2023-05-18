@@ -240,7 +240,7 @@ def generate_table_history(booking_history):
         date = document["date"]
         session = document["slot"]
         booking_id = document["booking_id"]
-        output += f"<b>Date: </b>{date}\n<b>Session Number:</b>{session}\n<b>Booking ID:</b> {booking_id}\n-------\n"
+        output += f"<b>Date: </b>{date}\n<b>Session Number:</b>{session}\n<b>Booking ID: </b> {booking_id}\n-------\n"
     return output
 
 
@@ -598,16 +598,28 @@ async def echo(request: Request):
                                 booking = {"booking_id": booking_id, "user_id": user_id, "slot": slot, "date": date, "time": time.time()}
                                 # Add the booking to booking_history document of the user_id and also to the booking_history document
                                 clients.update_one({'random_id': user_id}, {'$push': {'booking_history': booking}})
-                                user_message_confirmation = "" # This is the message for the user itself
-                                user_message_confirmation += f"Booking ID: {booking_id}\n"
-                                user_message_confirmation += f"Slot: {slot}\n"
-                                user_message_confirmation += f"Date: {date}\n"
-                                user_message_confirmation += "Please use /start_checking command AGAIN to start checking for the slot.\n"
+                                session_timings = {
+                                    1: '0730',
+                                    2: '0920',
+                                    3: '1130',
+                                    4: '1320',
+                                    5: '1520',
+                                    6: '1710',
+                                    7: '1920',
+                                    8: '2110'
+                                }
+                                user_message_confirmation = "<u><b>Booking Confirmation:</b></u>\n\n"
+                                user_message_confirmation += f"<b>Booking ID:</b> {booking_id}\n"
+                                user_message_confirmation += f"<b>Date:</b> {date}\n"
+                                user_message_confirmation += f"<b>Slot Number:</b> {slot}\n"
+                                user_message_confirmation += f"<b>Timing:</b> {session_timings[slot]}\n"
+                                user_message_confirmation += "1 credit has been deducted from your account. Kindly report to BBDC for your lessons during the above timing.\n"
                                 clients.update_one({'random_id': user_id}, {'$set': {'checking': False}})
                                 if clients.find_one({'random_id': user_id})['credits'] == 0:
                                     user_message_confirmation += "You have no more credits left. Kindly please add more credits using the /credits command"
                                 await send_text(chat_id, message_confirmation)
                                 await send_text(user_status["_id"], user_message_confirmation)
+                                await send_text(chat_id, "⚠️ Please use /start_checking command AGAIN to start checking for new slots. ⚠️")
                                 return {"status": "ok"}                                 
         else: # Create a new user in clients
             first_char = str(random.randint(0, 9))
