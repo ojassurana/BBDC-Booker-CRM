@@ -428,7 +428,7 @@ async def echo(request: Request):
                             await send_text(chat_id, "You are not in the queue for checking. Please use the /start_checking command to start checking for sessions.")
                             return {"status": "ok"}
                         else:
-                            await send_text(chat_id, "We have stopped looking for sessions for you.")
+                            await send_text(chat_id, "We have stopped looking for sessions for you. Please use /start_checking again to book sessions.")
                             clients.update_one({'_id': chat_id}, {'$set': {'checking': False}})
                             return {"status": "ok"}
                     elif "/help" == update.message.text:
