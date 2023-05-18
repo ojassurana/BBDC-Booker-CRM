@@ -236,10 +236,9 @@ def session_is_empty(session_choices):
 
 def generate_table_history(booking_history):
     for document in booking_history:
-        credits_used = document["credits_used"]
         date = document["date"]
-        session = document["session"]
-        output += f"{date}\n{session}\n{credits_used}\n--------------------------------\n"
+        session = document["slot"]
+        output += f"<b>Date: </b>{date}\n<b>Session Number:</b>{session}\n--------------------------------\n"
     return output
 
 
