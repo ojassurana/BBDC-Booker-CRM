@@ -88,6 +88,19 @@ users = mongo['Users']
 clients = users['clients']
 admin = users['admin']
 
+def retract_booking_validator(input_str):
+    input_list = input_str.split(" ")
+    if len(input_list) != 3:
+        return False
+    command, user_id, booking_id = input_list[0], input_list[1], input_list[2]
+    if command != "/retract_booking":
+        return False
+    if len(user_id) != 4:
+        return False
+    if len(booking_id) != 4:
+        return False
+    return [user_id, booking_id]
+
 
 def view_booking_history_validator(input_str):
     input_list = input_str.split(" ")
@@ -671,9 +684,39 @@ async def echo(request: Request):
                                     formatted_range = start_time.strftime("%-I:%M%p") + " to " + end_time.strftime("%-I:%M%p")
                                     message += f"Booking ID: {booking_id}\n"
                                     message += f"Date: {date1}\n"
+                                    message += f"Slot: {slot}\n"
                                     message += f"Timing: {formatted_range}\n\n------------------------\n"
                                 await send_text(chat_id, message)
-                                return {"status": "ok"}                         
+                                return {"status": "ok"}
+                    elif "/retract_booking" in update.message.text: 
+                        data = retract_booking_validator(update.message.text)
+                        if data == False:
+                            await send_text(chat_id, "Please enter in the correct format /retract_booking [user_id] [booking_id]")   
+                            return {"status": "ok"}
+                        else:
+                            user_id, booking_id = data[0], data[1]
+                            user_status = clients.find_one({'random_id': user_id})
+                            if user_status == None:
+                                await send_text(chat_id, "User does not exist.")
+                                return {"status": "ok"}
+                            else:
+                                booking_history = user_status['booking_history']
+                                booking_exists = False
+                                for booking in booking_history:
+                                    if booking['booking_id'] == booking_id:
+                                        booking_exists = True
+                                        booking_history.remove(booking)
+                                        break
+                                if booking_exists == False:
+                                    await send_text(chat_id, "Booking ID does not exist.")
+                                    return {"status": "ok"}
+                                else:
+                                    clients.update_one({'random_id': user_id}, {'$set': {'credits': user_status['credits'] + 1}})
+                                    clients.update_one({'random_id': user_id}, {'$set': {'credits_used': user_status['credits_used'] - 1}})
+                                    clients.update_one({'random_id': user_id}, {'$set': {'booking_history': booking_history}})
+                                    await send_text(user_status["_id"], "Due to some error on our part, your booking has been retracted. 1 credit has been refunded to your account. \n Booking ID retracted: " + booking_id)
+                                    return {"status": "ok"}
+                                    
         else: # Create a new user in clients
             first_char = str(random.randint(0, 9))
             second_char = random.choice(string.ascii_uppercase)
