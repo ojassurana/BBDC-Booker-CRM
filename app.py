@@ -650,12 +650,22 @@ async def echo(request: Request):
                                 booking_history = user_status['booking_history']
                                 message = ""
                                 message += f"User ID: {user_id}\n\n"
+                                session_timings = {
+                                    1: '0730',
+                                    2: '0920',
+                                    3: '1130',
+                                    4: '1320',
+                                    5: '1520',
+                                    6: '1710',
+                                    7: '1920',
+                                    8: '2110'
+                                }
                                 for booking in booking_history:
                                     booking_id = booking['booking_id']
                                     slot = booking['slot']
                                     date = booking['date']
                                     date1 = datetime.strptime(date, "%Y-%m-%d").strftime("%d %B %Y")
-                                    time_string = booking["slot"]
+                                    time_string = session_timings[slot]
                                     start_time = datetime.strptime(time_string, "%H%M")
                                     end_time = start_time + timedelta(minutes=100)
                                     formatted_range = start_time.strftime("%-I:%M%p") + " to " + end_time.strftime("%-I:%M%p")
