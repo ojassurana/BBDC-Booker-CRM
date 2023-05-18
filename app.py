@@ -613,8 +613,8 @@ async def echo(request: Request):
                                 date1 = datetime.strptime(date, "%Y-%m-%d").strftime("%d %B %Y")
                                 user_message_confirmation += f"<b>Date:</b> {date1}\n"
                                 time_string = session_timings[slot]
-                                start_time = datetime.datetime.strptime(time_string, "%H%M")
-                                end_time = start_time + datetime.timedelta(minutes=100)
+                                start_time = datetime.strptime(time_string, "%H%M")
+                                end_time = start_time + timedelta(minutes=100)
                                 formatted_range = start_time.strftime("%-I:%M%p") + " to " + end_time.strftime("%-I:%M%p")
                                 user_message_confirmation += f"<b>Timing:</b> {formatted_range}\n"
                                 user_message_confirmation += "\n1 credit has been deducted from your account. Kindly report to BBDC for your lessons during the above timing.\n"
