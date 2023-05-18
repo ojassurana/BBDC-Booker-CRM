@@ -4,6 +4,7 @@ import requests
 from fastapi.middleware.cors import CORSMiddleware
 from telegram import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
 from datetime import datetime, timedelta
+from fastapi.responses import HTMLResponse
 from typing import Dict, List
 import time
 import telegram
@@ -46,7 +47,6 @@ app.add_middleware(
 # Text: ______________________________________________________________________________________________________________
 msg1 = '''<u><b>What this bot does:</b></u>
 We are a team of individuals who will assist in booking your BBDC practical lessons slots based on your given schedule.
-<b>Remember to keep your BBDC Balance TOPPED UP!</b>
 
 ✅ <b>Supported</b>: Class 3/3A Practical lessons
 ❌ <b>Not supported</b>: FTT/BTT/TPDS/DS
@@ -56,33 +56,34 @@ We are a team of individuals who will assist in booking your BBDC practical less
 See /credits command for more information.
 
 <u><b>How to use:</b></u>
-Use /setlogin command to update your BBDC username and password.
-Add bot credits with /credits command.
-Use the /choose_session command to select the practical sessions you are available for.
-Use the /start_checking command to start checking for new slots. We will automatically do it for you and inform you if you got a slot. Use the /stop_checking command to stop checking for new slots.
-The bot will notify you once a slot is found and booked for you.
-Use /help command to view a list of all other useful commands.
-
-<u><b>Get notified of slots outside of your specified schedule:</b></u>
-Click on this link.
+1. Use /setlogin command to update your BBDC username and password.
+2. Add bot credits with /credits command.
+3. Use the /choose_session command to select the practical sessions you are available for.
+4. Use the /start_checking command to start checking for new slots. We will automatically do it for you and inform you if you got a slot. Use the /stop_checking command to stop checking for new slots.
+5. The bot will notify you once a slot is found and booked for you.
 
 <u><b>Note:</b></u>
 In case there are any issues, we will contact you immediately on WhatsApp.
+⚠️ <b>Remember to keep your BBDC Balance TOPPED UP or we will be unable to book slots for you</b>
 '''
 msg2 = "You may use the /help command to find out more."
 msg3 = '''
-<b><u>Available Credits:</u></b> {credits}
-<b><u>Credits used:</u></b> {credits_used}
+<b><u>Your bot credits:</u></b>
+Available Credits: {credits}
+Credits used: {credits_used}
 
-You can buy Bot credits for $10 per credit. Whenever you purchase a slot successfully, one credit will be deducted from your account. If you resell any of the slots you've purchased, you won't get a refund for the credits used.
+<b><u>Pricing:</u></b>
 
-<b><u>Topping up credits:</u></b>
-Visit the link below, determine the amount of credits you wish to purchase and proceed to pay with PayNow.
+You can buy bot credits for $10/credit. Whenever you purchase a slot successfully, one credit will be deducted from your account. If you resell any of the slots you've purchased, you won't get a refund for the credits used.
 
+<b><u>How to top-up credits?</u></b>
+1. Visit the link below, determine the amount of credits you wish to purchase and proceed to pay with PayNow.
+2. After payments, credits are immedately added to your account.
 <b><u>Link:</u></b>
+
 https://buy.stripe.com/{product_payment_code}?client_reference_id={random_id}
 
-You will receive a notification upon the payment being completed, if any issues are to arise, use the /help command.
+🆘 Need help? Use the /contact command to get support.
 '''
 # Functions: _________________________________________________________________________________________________________
 users = mongo['Users']
@@ -270,10 +271,10 @@ async def top_up(amount, client_reference_id, stripe_id, time):
     to_add = {"amount": amount, "stripe_id": stripe_id, "time": time, "credits": credits}
     clients.update_one({"random_id": client_reference_id}, {"$push": {"topup_history":  to_add}})
     clients.update_one({"random_id": client_reference_id}, {"$inc": {"credits": credits}})
-    message = "Congratulations! You have topped up " + str(int(credits)) + " credits.\nThe total amount you paid us via PayNow is: $"+str(amount)
+    message = "<b>Top-up notification</b>:\n\nTop-up credits:" + str(int(credits)) + " credits have been added to your account\nAmount paid: $"+str(amount)+"\n\nThank you for your purchase! You made use /credits to check your total amount of credits."
     telegram_id = clients.find_one({"random_id": client_reference_id})["_id"]
     await send_text(telegram_id, message)
-    await send_text(telegram_id, "You may use the /credits command to check your total amount of credits.")
+    await send_text(telegram_id, "Next steps:\n1. Please make use of /choose_session to choose which driving sessions you are free for.\n2. Use /start_checking to start checking for available driving sessions.")
 
 
 async def update_session_choices(user_id, sessions):
@@ -354,6 +355,7 @@ async def setlogin_handler(chat_id, client_status, update):
         await update_client_info_from_payload(chat_id, info_payload)
         await info_payload_reset(chat_id)
         await bot.send_message(chat_id=update.message.chat_id, text="Your BBDC username and password has been updated!", reply_markup=ReplyKeyboardRemove())
+        await bot.send_message(chat_id=update.message.chat_id, text="You may now use the /credits command to top-up your credits so that we can book slots for you.")
         if client_status["group"] == "": # Yet to set the group
             await send_text(admin_id, "A new user has been added to the database.\n<b>Database ID is:</b> " + client_status['random_id'])
         send_appscript_request({'method': "setLogin", 'username': info_payload['username'], 'password': info_payload['password'], 'type': info_payload["type"], 'phone': update.message.contact.phone_number, "id": client_status['random_id']})
@@ -403,7 +405,7 @@ async def echo(request: Request):
                             await send_text(chat_id, "You do not have enough credits to book a session. Please top up your credits using the /credits command first") 
                             return {"status": "ok"}
                         else:
-                            await send_text(chat_id, "Click on the following link to inform us your free timing:\nhttps://bbdcbot.s3.ap-southeast-1.amazonaws.com/index.html?id="+client_status['random_id'])
+                            await send_text(chat_id, "Click on the following link to let us know your availible timings:\n  <a href='https://bbdcbot.s3.ap-southeast-1.amazonaws.com/index.html?id="+client_status['random_id']+"'Click Here</a>")
                             return {"status": "ok"}
                     elif "/start_checking" == update.message.text:
                         if client_status["checking"] == True:
@@ -682,10 +684,23 @@ async def form(request: Request):
     await update_session_choices(user_id, sessions)
     table = generate_table(sessions)
     telegram_id = clients.find_one({'random_id': user_id})['_id']
-    await send_text(telegram_id, "Your sessions have been successfully updated! You may go to https://bbdcbot.s3.ap-southeast-1.amazonaws.com/index.html?id="+user_id+"  to update your availible lesson timings again!\nHere's a summary of your currently selected sessions:\n"+table)
-    await send_text(telegram_id, "You can use /start_checking command next and bot will inform you when a session has been reserved for you.")
+    await send_text(telegram_id, "Your sessions have been successful updated! If you wish to update the slots you are free for, use /choose_session again to update you availible timings if you want. Here's a summary of your currently selected sessions:\n"+table)
+    await send_text(telegram_id, "⚠️ Please use /start_checking command next and bot will inform you when a session has been reserved for you by our team. ⚠️")
     clients.update_one({'random_id': user_id}, {'$set': {'checking': False}})
-    return "Your sessions have been successfully updated! Please head back to the telegram bot :)"
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Thanks!</title>
+    </head>
+    <body>
+        <h1>Thanks for informing us your free timings!</h1>
+        <p>You may now proceed back to the bot: <a href="https://t.me/bbdcslotbooking_bot">Telegram Bot</a> or you may close this tab.</p>
+        <p>We will notify you once we have booked a slot for you :)</p>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content, status_code=200)
 
 
 
