@@ -723,7 +723,7 @@ async def echo(request: Request):
             third_char = str(random.randint(0, 9))
             fourth_char = random.choice(string.ascii_uppercase)
             random_id = f"{first_char}{second_char}{third_char}{fourth_char}"
-            while clients.find({"random_id": random_id}).count > 0:
+            while clients.count_documents({"random_id": random_id}) > 0:
                 first_char = str(random.randint(0, 9))
                 second_char = random.choice(string.ascii_uppercase)
                 third_char = str(random.randint(0, 9))
