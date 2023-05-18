@@ -621,7 +621,7 @@ async def echo(request: Request):
                                     user_message_confirmation += "You have no more credits left. Kindly please add more credits using the /credits command"
                                 await send_text(chat_id, message_confirmation)
                                 await send_text(user_status["_id"], user_message_confirmation)
-                                await send_text(chat_id, "⚠️ Please use /start_checking command AGAIN to start checking for new slots. ⚠️")
+                                await send_text(user_status["_id"], "⚠️ Please use /start_checking command AGAIN to start checking for new slots. ⚠️")
                                 return {"status": "ok"}                                 
         else: # Create a new user in clients
             first_char = str(random.randint(0, 9))
@@ -680,7 +680,11 @@ async def webhook_received(request: Request, stripe_signature: str = Header(None
     client_reference_id = event_data['object']['client_reference_id']
     stripe_id = event_data['object']['id']
     time = event_data["object"]["created"]
-    await top_up(amount, client_reference_id, stripe_id, time)
+    # check if stripe_id is already in the database
+    if clients.find_one({"random_id": client_reference_id, "topup_history": {"$elemMatch": {"stripe_id": stripe_id}}}) != None:
+        return {"status": "success"}
+    else:
+        await top_up(amount, client_reference_id, stripe_id, time)
     return {"status": "success"}
 
 
