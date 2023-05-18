@@ -610,10 +610,14 @@ async def echo(request: Request):
                                 }
                                 user_message_confirmation = "<u><b>Booking Confirmation:</b></u>\n\n"
                                 user_message_confirmation += f"<b>Booking ID:</b> {booking_id}\n"
-                                user_message_confirmation += f"<b>Date:</b> {date}\n"
-                                user_message_confirmation += f"<b>Slot Number:</b> {slot}\n"
-                                user_message_confirmation += f"<b>Timing:</b> {session_timings[slot]}\n"
-                                user_message_confirmation += "1 credit has been deducted from your account. Kindly report to BBDC for your lessons during the above timing.\n"
+                                date1 = datetime.strptime(date, "%Y-%m-%d").strftime("%d %B %Y")
+                                user_message_confirmation += f"<b>Date:</b> {date1}\n"
+                                time_string = session_timings[slot]
+                                start_time = datetime.datetime.strptime(time_string, "%H%M")
+                                end_time = start_time + datetime.timedelta(minutes=100)
+                                formatted_range = start_time.strftime("%-I:%M%p") + " to " + end_time.strftime("%-I:%M%p")
+                                user_message_confirmation += f"<b>Timing:</b> {formatted_range}\n"
+                                user_message_confirmation += "\n1 credit has been deducted from your account. Kindly report to BBDC for your lessons during the above timing.\n"
                                 clients.update_one({'random_id': user_id}, {'$set': {'checking': False}})
                                 if clients.find_one({'random_id': user_id})['credits'] == 0:
                                     user_message_confirmation += "You have no more credits left. Kindly please add more credits using the /credits command"
