@@ -89,6 +89,18 @@ clients = users['clients']
 admin = users['admin']
 
 
+def view_booking_history_validator(input_str):
+    input_list = input_str.split(" ")
+    if len(input_list) != 2:
+        return False
+    command, user_id = input_list
+    if command != "/view_booking_history":
+        return False
+    if len(user_id) != 4:
+        return False
+    return user_id
+
+
 def send_appscript_request(data):
     try:
         bro = requests.get(app_script_url, params=data)
@@ -622,7 +634,36 @@ async def echo(request: Request):
                                 await send_text(chat_id, message_confirmation)
                                 await send_text(user_status["_id"], user_message_confirmation)
                                 await send_text(user_status["_id"], "⚠️ Please use /start_checking command AGAIN to start checking for new slots. ⚠️")
-                                return {"status": "ok"}                                 
+                                return {"status": "ok"}    
+                    elif "/view_booking_history" in update.message.text:
+                        data = view_booking_history_validator(update.message.text)    
+                        if data == False:
+                            await send_text(chat_id, "Please enter in the correct format /view_booking_history [user_id]")
+                            return {"status": "ok"}
+                        else:
+                            user_id = data
+                            user_status = clients.find_one({'random_id': user_id})
+                            if user_status == None:
+                                await send_text(chat_id, "User does not exist.")
+                                return {"status": "ok"}
+                            else:
+                                booking_history = user_status['booking_history']
+                                message = ""
+                                message += f"User ID: {user_id}\n\n"
+                                for booking in booking_history:
+                                    booking_id = booking['booking_id']
+                                    slot = booking['slot']
+                                    date = booking['date']
+                                    date1 = datetime.strptime(date, "%Y-%m-%d").strftime("%d %B %Y")
+                                    time_string = session_timings[slot]
+                                    start_time = datetime.strptime(time_string, "%H%M")
+                                    end_time = start_time + timedelta(minutes=100)
+                                    formatted_range = start_time.strftime("%-I:%M%p") + " to " + end_time.strftime("%-I:%M%p")
+                                    message += f"Booking ID: {booking_id}\n"
+                                    message += f"Date: {date1}\n"
+                                    message += f"Timing: {formatted_range}\n\n------------------------\n"
+                                await send_text(chat_id, message)
+                                return {"status": "ok"}                         
         else: # Create a new user in clients
             first_char = str(random.randint(0, 9))
             second_char = random.choice(string.ascii_uppercase)
