@@ -73,14 +73,13 @@ Available Credits: {credits}
 Credits used: {credits_used}
 
 <b><u>Pricing:</u></b>
-
-You can buy bot credits for $10/credit. Whenever you purchase a slot successfully, one credit will be deducted from your account. If you resell any of the slots you've purchased, you won't get a refund for the credits used.
+You can buy bot credits for $10/credit.\nWhenever you purchase a slot successfully, one credit will be deducted from your account.\nIf you resell any of the slots you've purchased, you won't get a refund for the credits used.
 
 <b><u>How to top-up credits?</u></b>
 1. Visit the link below, determine the amount of credits you wish to purchase and proceed to pay with PayNow.
 2. After payments, credits are immedately added to your account.
-<b><u>Link:</u></b>
 
+<b><u>Link:</u></b>
 https://buy.stripe.com/{product_payment_code}?client_reference_id={random_id}
 
 🆘 Need help? Use the /contact command to get support.
@@ -271,7 +270,7 @@ async def top_up(amount, client_reference_id, stripe_id, time):
     to_add = {"amount": amount, "stripe_id": stripe_id, "time": time, "credits": credits}
     clients.update_one({"random_id": client_reference_id}, {"$push": {"topup_history":  to_add}})
     clients.update_one({"random_id": client_reference_id}, {"$inc": {"credits": credits}})
-    message = "<b>Top-up notification</b>:\n\nTop-up credits:" + str(int(credits)) + " credits have been added to your account\nAmount paid: $"+str(amount)+"\n\nThank you for your purchase! You made use /credits to check your total amount of credits."
+    message = "<b>Top-up notification</b>:\n\n<b>Top-up credits:</b> " + str(int(credits)) + " credits have been added to your account\n<b>Amount paid:</b> $"+str(amount)+"\n\nThank you for your purchase! You made use /credits to check your total amount of credits."
     telegram_id = clients.find_one({"random_id": client_reference_id})["_id"]
     await send_text(telegram_id, message)
     await send_text(telegram_id, "Next steps:\n1. Please make use of /choose_session to choose which driving sessions you are free for.\n2. Use /start_checking to start checking for available driving sessions.")
@@ -405,7 +404,7 @@ async def echo(request: Request):
                             await send_text(chat_id, "You do not have enough credits to book a session. Please top up your credits using the /credits command first") 
                             return {"status": "ok"}
                         else:
-                            await send_text(chat_id, "Click on the following link to let us know your availible timings:\n  <a href='https://bbdcbot.s3.ap-southeast-1.amazonaws.com/index.html?id="+client_status['random_id']+"'Click Here</a>")
+                            await send_text(chat_id, "Click on the following link to let us know your availible timings:\n  <a href='https://bbdcbot.s3.ap-southeast-1.amazonaws.com/index.html?id="+client_status['random_id']+"'>Click Here</a>")
                             return {"status": "ok"}
                     elif "/start_checking" == update.message.text:
                         if client_status["checking"] == True:
