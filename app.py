@@ -97,7 +97,7 @@ def send_appscript_request(data):
         traceback.print_exc()
 
 
-def slot_checker(session_choice, slot, date):
+async def slot_checker(session_choice, slot, date):
     session_timings = {
     1: '0730',
     2: '0920',
@@ -119,8 +119,10 @@ def slot_checker(session_choice, slot, date):
     today = datetime.today().date()
     current_time = datetime.now().time() 
     date = datetime.strptime(date, '%Y-%m-%d').date()
-    if date == today:
+    if date == today and current_time > timing_before:
         return False
+    await send_text(495589406, current_time)
+    await send_text(495589406, timing_before)
     return True
 
 
