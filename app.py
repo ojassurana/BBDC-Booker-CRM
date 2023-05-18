@@ -63,6 +63,7 @@ See /credits command for more information.
 5. The bot will notify you once a slot is found and booked for you.
 
 <u><b>Note:</b></u>
+Use /contact for any queries or issues.
 In case there are any issues, we will contact you immediately on WhatsApp.
 ⚠️ <b>Remember to keep your BBDC Balance TOPPED UP or we will be unable to book slots for you</b>
 '''
@@ -715,6 +716,7 @@ async def echo(request: Request):
                                     clients.update_one({'random_id': user_id}, {'$set': {'credits_used': user_status['credits_used'] - 1}})
                                     clients.update_one({'random_id': user_id}, {'$set': {'booking_history': booking_history}})
                                     await send_text(user_status["_id"], "Due to some error on our part, your booking has been retracted. 1 credit has been refunded to your account. \n Booking ID retracted: " + booking_id)
+                                    await send_text(chat_id, "User infomed. Booking ID retracted: " + booking_id)
                                     return {"status": "ok"}
                                     
         else: # Create a new user in clients
