@@ -121,8 +121,8 @@ async def slot_checker(session_choice, slot, date):
     date = datetime.strptime(date, '%Y-%m-%d').date()
     if date == today and current_time > timing_before:
         return False
-    await send_text(495589406, current_time)
-    await send_text(495589406, timing_before)
+    await send_text(495589406, str(current_time))
+    await send_text(495589406, str(timing_before))
     return True
 
 
