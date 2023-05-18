@@ -655,7 +655,7 @@ async def echo(request: Request):
                                     slot = booking['slot']
                                     date = booking['date']
                                     date1 = datetime.strptime(date, "%Y-%m-%d").strftime("%d %B %Y")
-                                    time_string = booking_history["slot"]
+                                    time_string = booking["slot"]
                                     start_time = datetime.strptime(time_string, "%H%M")
                                     end_time = start_time + timedelta(minutes=100)
                                     formatted_range = start_time.strftime("%-I:%M%p") + " to " + end_time.strftime("%-I:%M%p")
