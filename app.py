@@ -359,7 +359,7 @@ async def setlogin_handler(chat_id, client_status, update):
     elif client_status['state']['minor'] == 2 and update.message and update.message.text:
         text = update.message.text
         await update_info_payload(chat_id, "password", text)
-        await send_options_buttons(client_status['_id'], "Are you booking Class 3A or Class 3 lesson slot?",["Class 3A", "Class 3"])
+        await send_options_buttons(client_status['_id'], "Are you booking Class 3A or Class 3 practical slot?\nClick on the button below 👇🏼",["Class 3A", "Class 3"])
         await update_state_client(client_status['_id'], 1, 3)
     elif client_status['state']['minor'] == 3 and update.callback_query and update.callback_query.data:
         text = update.callback_query.data
@@ -371,9 +371,9 @@ async def setlogin_handler(chat_id, client_status, update):
             await send_text(chat_id, "Please select an option instead!")
             return False
         await update_state_client(client_status['_id'], 1, 4)
-        reply_keyboard = [[KeyboardButton("Share Phone Number", request_contact=True)]]
+        reply_keyboard = [[KeyboardButton("📞 Share Phone Number 📞", request_contact=True)]]
         markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=True)
-        await bot.send_message(chat_id, text="Please share your phone number", reply_markup=markup)
+        await bot.send_message(chat_id, text="Click the button below to share your 📞 contact details\nThis is so that we can contact you if there are any issues.", reply_markup=markup)
     elif client_status['state']['minor'] == 4 and update.message.contact != None:
         await update_state_client(client_status['_id'], 0, 0)
         await update_info_payload(chat_id, "phone", update.message.contact.phone_number)
@@ -470,11 +470,16 @@ async def echo(request: Request):
                             await send_text(chat_id, generate_table_history(client_status['booking_history']))
                             return {"status": "ok"}
                     else: 
-                        await send_text(chat_id, "I am not sure what you mean 😅. Use the /start command to see what I can do for you.")
+                        await send_text(chat_id, "I am not sure what you mean 😅. Please use the availible command in the menu section to interact with me. Or /contact support for help.")
 
                 else:
                     await send_text(chat_id, "Please enter a valid input.")
             elif client_status['state']['major'] == 1:
+                if update.message and update.message.text == "/setlogin":
+                    await send_text(chat_id, "Your login details have been cleared from our system.")
+                    await update_state_client(chat_id, 1, 0)
+                    await info_payload_reset(chat_id)
+                    return {"status": "ok"}
                 if update.message and update.message.text == "/cancel":
                     await send_text(chat_id, "Your current procedure has been cancelled.")
                     await update_state_client(chat_id, 0, 0)
@@ -518,9 +523,9 @@ async def echo(request: Request):
                                 await send_text(chat_id, "User does not exist.")
                                 return {"status": "ok"}
                             else:
-                                await send_text(user_status["_id"], "Our team has detected that you have entered the wrong login details. Please use /setlogin to update your login details.")
+                                await send_text(user_status["_id"], "⚠️ Our team has detected that you have entered the wrong login details. Please use /setlogin to update your login details. ⚠️")
                                 await send_text(chat_id, "User "+user_id+" has been notified.")
-                                return {"status": "ok"}
+                                return {"status": "ok"} 
                     elif "/top_up" in update.message.text:
                         data = top_up_validator(update.message.text)
                         if data == False:
