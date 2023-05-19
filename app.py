@@ -479,12 +479,15 @@ async def echo(request: Request):
                     await send_text(chat_id, "Please enter a valid input.")
             elif client_status['state']['major'] == 1:
                 if update.message and update.message.text == "/re_enter":
-                    if client_status['state']['minor'] == 1:
+                    if client_status['state']['minor'] == 2:
                         await bot.send_message(chat_id=chat_id, text="Please re-enter your username", reply_markup=ReplyKeyboardRemove())
-                    elif client_status['state']['minor'] == 2:
-                        await bot.send_message(chat_id=chat_id, text="Please re-enter your password", reply_markup=ReplyKeyboardRemove())
+                        await update_state_client(chat_id, 1, 1)
                     elif client_status['state']['minor'] == 3:
+                        await bot.send_message(chat_id=chat_id, text="Please re-enter your password", reply_markup=ReplyKeyboardRemove())
+                        await update_state_client(chat_id, 1, 2)
+                    elif client_status['state']['minor'] == 4:
                         await bot.send_message(chat_id=chat_id, text="Please re-enter your license class", reply_markup=ReplyKeyboardRemove())
+                        await update_state_client(chat_id, 1, 3)
                     return {"status": "ok"}
                 if update.message and update.message.text == "/cancel":
                     await send_text(chat_id, "Your current procedure has been cancelled.")
