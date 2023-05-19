@@ -354,13 +354,13 @@ async def setlogin_handler(chat_id, client_status, update):
     if client_status['state']['minor'] == 1 and update.message and update.message.text:
         text = update.message.text
         await update_info_payload(chat_id, "username", text)
-        await send_text(client_status['_id'], "The system has received your User ID, if any changes are needed, please use the /set_login command.")
+        await send_text(client_status['_id'], "The system has received your User ID, if any changes are needed, please use the /setlogin command.")
         await send_text(client_status['_id'], "Please enter your BBDC password:")
         await update_state_client(client_status['_id'], 1, 2)
     elif client_status['state']['minor'] == 2 and update.message and update.message.text:
         text = update.message.text
         await update_info_payload(chat_id, "password", text)
-        await send_text(client_status['_id'], "The system has received your password, if any changes are needed, please use the /set_login command.")
+        await send_text(client_status['_id'], "The system has received your password, if any changes are needed, please use the /setlogin command.")
         await send_options_buttons(client_status['_id'], "Are you booking Class 3A or Class 3 practical slot?\nClick on the button below 👇🏼",["Class 3A", "Class 3"])
         await update_state_client(client_status['_id'], 1, 3)
     elif client_status['state']['minor'] == 3 and update.callback_query and update.callback_query.data:
@@ -382,7 +382,7 @@ async def setlogin_handler(chat_id, client_status, update):
         info_payload = clients.find_one({'_id': chat_id})['info_payload']
         await update_client_info_from_payload(chat_id, info_payload)
         await info_payload_reset(chat_id)
-        await bot.send_message(chat_id=update.message.chat_id, text="Your BBDC username and password has been updated! IF any changes are needed,please use the /set_login command.", reply_markup=ReplyKeyboardRemove())
+        await bot.send_message(chat_id=update.message.chat_id, text="Your BBDC username and password has been updated! IF any changes are needed,please use the /setlogin command.", reply_markup=ReplyKeyboardRemove())
         await bot.send_message(chat_id=update.message.chat_id, text="You may now use the /credits command to top-up your credits so that we can book slots for you.")
         if client_status["group"] == "": # Yet to set the group
             await send_text(admin_id, "A new user has been added to the database.\n<b>Database ID is:</b> " + client_status['random_id'])
