@@ -344,10 +344,7 @@ async def send_options_buttons(chat_id, text, options):
         buttons.append(InlineKeyboardButton(text=option, callback_data=option))
     keyboard = [buttons]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await bot.send_message(chat_id=chat_id, text="", reply_markup=ReplyKeyboardRemove())
     await bot.send_message(chat_id=chat_id, text=text, reply_markup=reply_markup)
-
-
 
 
 
