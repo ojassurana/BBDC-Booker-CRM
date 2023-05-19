@@ -488,8 +488,8 @@ async def echo(request: Request):
                     elif client_status['state']['minor'] == 4:
                         reply_keyboard = [[KeyboardButton("Share Phone Number 📞", request_contact=True)]]
                         markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=True)
-                        await send_text(client_status['_id'], "The system has received your license type, if any changes are needed, please use /re_enter commmand.")
-                        await bot.send_message(chat_id, text="Click the button below to share your 📞 contact details\nThis is so that we can contact you if there are any issues.", reply_markup=markup)
+                        await send_text(client_status['_id'], "Please re-enter your license type")
+                        await send_options_buttons(client_status['_id'], "Click on the button below 👇🏼",["Class 3A", "Class 3"])
                         await update_state_client(chat_id, 1, 3)
                     return {"status": "ok"}
                 if update.message and update.message.text == "/cancel":
