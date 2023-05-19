@@ -354,13 +354,13 @@ async def setlogin_handler(chat_id, client_status, update):
     if client_status['state']['minor'] == 1 and update.message and update.message.text:
         text = update.message.text
         await update_info_payload(chat_id, "username", text)
-        await send_text(client_status['_id'], "The system has received your username, if any changes are needed, please use the /setlogin command.")
+        await send_text(client_status['_id'], "The system has received your username, if any changes are needed, please use /re_enter commmand")
         await send_text(client_status['_id'], "Please enter your BBDC <b>password</b>:")
         await update_state_client(client_status['_id'], 1, 2)
     elif client_status['state']['minor'] == 2 and update.message and update.message.text:
         text = update.message.text
         await update_info_payload(chat_id, "password", text)
-        await send_text(client_status['_id'], "The system has received your password, if any changes are needed, please use the /setlogin command.")
+        await send_text(client_status['_id'], "The system has received your password, if any changes are needed, please use /re_enter commmand.")
         await send_options_buttons(client_status['_id'], "Are you booking Class 3A or Class 3 practical slot?\nClick on the button below 👇🏼",["Class 3A", "Class 3"])
         await update_state_client(client_status['_id'], 1, 3)
     elif client_status['state']['minor'] == 3 and update.callback_query and update.callback_query.data:
@@ -375,6 +375,7 @@ async def setlogin_handler(chat_id, client_status, update):
         await update_state_client(client_status['_id'], 1, 4)
         reply_keyboard = [[KeyboardButton("Share Phone Number 📞", request_contact=True)]]
         markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=True)
+        await send_text(client_status['_id'], "The system has received your license type, if any changes are needed, please use /re_enter commmand.")
         await bot.send_message(chat_id, text="Click the button below to share your 📞 contact details\nThis is so that we can contact you if there are any issues.", reply_markup=markup)
     elif client_status['state']['minor'] == 4 and update.message.contact != None:
         await update_state_client(client_status['_id'], 0, 0)
@@ -477,11 +478,8 @@ async def echo(request: Request):
                 else:
                     await send_text(chat_id, "Please enter a valid input.")
             elif client_status['state']['major'] == 1:
-                if update.message and update.message.text == "/setlogin":
-                    await bot.send_message(chat_id=chat_id, text="Your login details have been cleared from our system. Please re-enter your login details again.", reply_markup=ReplyKeyboardRemove())
-                    await send_text(chat_id, "Please enter your BBDC username:")
-                    await update_state_client(chat_id, 1, 1)
-                    await info_payload_reset(chat_id)
+                if update.message and update.message.text == "/re_enter":
+                    await bot.send_message(chat_id=chat_id, text="Please re-enter", reply_markup=ReplyKeyboardRemove())
                     return {"status": "ok"}
                 if update.message and update.message.text == "/cancel":
                     await send_text(chat_id, "Your current procedure has been cancelled.")
