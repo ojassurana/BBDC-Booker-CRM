@@ -548,7 +548,7 @@ async def echo(request: Request):
                                 await send_text(chat_id, "User does not exist.")
                                 return {"status": "ok"}
                             else:
-                                await send_text(user_status["_id"], "Our workers have detected that you have insufficient funds in your BBDC account. Please top it up!")
+                                await send_text(user_status["_id"], "Our team has detected that you have insufficient funds in your BBDC account. Please top it up!")
                                 await send_text(chat_id, "User "+user_id+" has been notified.")
                                 return {"status": "ok"}
                     elif "/get_info" in update.message.text:
@@ -787,16 +787,25 @@ async def webhook_received(request: Request, stripe_signature: str = Header(None
     except Exception as e:
         print(e)
         return {"error": str(e)}
-    amount = event_data['object']['amount_total']/100
+
+    amount = event_data['object']['amount_total'] / 100
     client_reference_id = event_data['object']['client_reference_id']
     stripe_id = event_data['object']['id']
     time = event_data["object"]["created"]
-    # check if stripe_id is already in the database
-    if clients.find_one({"random_id": client_reference_id, "topup_history": {"$elemMatch": {"stripe_id": stripe_id}}}) != None:
+    status = event_data['object']['status']
+    
+    if status == 'paid':
+        # Check if stripe_id is already in the database
+        if clients.find_one({"random_id": client_reference_id, "topup_history": {"$elemMatch": {"stripe_id": stripe_id}}}) is not None:
+            return {"status": "success"}
+        else:
+            await top_up(amount, client_reference_id, stripe_id, time)
+            return {"status": "success"}
+    elif status == 'expired':
         return {"status": "success"}
     else:
-        await top_up(amount, client_reference_id, stripe_id, time)
-    return {"status": "success"}
+        return {"status": "success"}
+
 
 
 @app.post("/form")
