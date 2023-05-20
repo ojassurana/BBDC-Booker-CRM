@@ -423,7 +423,7 @@ async def echo(request: Request):
                             credits = client_status['credits']
                             credits_used = client_status['credits_used']
                             random_id = client_status['random_id']
-                            product_payment_code = "fZe9Dv49I1ICdFu5kk"
+                            product_payment_code = "test_5kAbKp4PK4a52ac4gh"
                             await send_text(chat_id, msg3.format(credits=credits, credits_used=credits_used, random_id=random_id, product_payment_code=product_payment_code))
                     elif "/choose_session" == update.message.text:
                         # checks if client has credits
