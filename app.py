@@ -446,7 +446,7 @@ async def echo(request: Request):
                                     await send_text(chat_id, "You have not selected any session. Please use the /choose_session command to select a session first.")
                                     return {"status": "ok"}
                                 else:
-                                    await send_text(chat_id, "We have started looking for sessions for you. If you wish to make any changes, use the /choose_session commmand. The following are the sessions you have selected to choose from:")
+                                    await send_text(chat_id, "We have started looking for sessions for you. If you wish to make any changes, use the /choose_session commmand.\n⚠️Do note that we can inform you as upto 2.5hrs before your practical lesson that your slot has been booked.\nThe following are the sessions you have selected to choose from:")
                                     await send_text(chat_id, generate_table(client_status['session_choices']))
                                     await bot.send_photo(chat_id=chat_id, photo="https://bbdcbot.s3.ap-southeast-1.amazonaws.com/Timings.png", caption="Please note the timings of each session.")
                                     clients.update_one({'_id': chat_id}, {'$set': {'checking': True}})
