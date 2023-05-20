@@ -793,7 +793,7 @@ async def webhook_received(request: Request, stripe_signature: str = Header(None
     stripe_id = event_data['object']['id']
     time = event_data["object"]["created"]
     status = event_data['object']['status']
-    
+    print(status)
     if status == 'paid':
         # Check if stripe_id is already in the database
         if clients.find_one({"random_id": client_reference_id, "topup_history": {"$elemMatch": {"stripe_id": stripe_id}}}) is not None:
