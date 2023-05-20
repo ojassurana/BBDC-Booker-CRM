@@ -796,8 +796,10 @@ async def webhook_received(request: Request, stripe_signature: str = Header(None
     if status == 'complete':
         # Check if stripe_id is already in the database
         if clients.find_one({"random_id": client_reference_id, "topup_history": {"$elemMatch": {"stripe_id": stripe_id}}}) is not None:
+            print("Stripe ID already exists")
             return {"status": "success"}
         else:
+            print("Stripe ID does not exist, will top-up")
             await top_up(amount, client_reference_id, stripe_id, time)
             return {"status": "success"}
     elif status == 'expired':
