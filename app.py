@@ -275,7 +275,7 @@ def generate_table(data_dict):
     header = "<b>Date:</b>             |<b>Sessions:</b>"
 
     # Create the separator row
-    separator = "-" * len(header)
+    separator = "-" * (len(header)-4)
 
     # Combine the header and separator rows
     table = f"{header}\n{separator}"
@@ -831,7 +831,7 @@ async def form(request: Request):
     await update_session_choices(user_id, sessions)
     table = generate_table(sessions)
     telegram_id = clients.find_one({'random_id': user_id})['_id']
-    await send_text(telegram_id, "Your sessions have been successful updated! If you wish to update the slots you are free for, use /choose_session again to update you availible timings if you want. Here's a summary of your currently selected sessions:\n"+table)
+    await send_text(telegram_id, "Your sessions have been successful updated! If you wish to update the slots you are free for, use\n/choose_session again to update you availible timings if you want. Here's a summary of your currently selected sessions:\n"+table)
     await send_text(telegram_id, "⚠️ Please use /start_checking command next and bot will inform you when a session has been reserved for you by our team. ⚠️")
     clients.update_one({'random_id': user_id}, {'$set': {'checking': False}})
     html_content = """
