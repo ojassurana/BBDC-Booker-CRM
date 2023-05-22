@@ -29,7 +29,7 @@ mongodb_key = "ojas.pem"
 heroku_url = "https:/bbdc-booker-crm.herokuapp.com"
 app_script_url = os.environ["app_script_url"]
 admin_id = int(os.environ['admin_id'])
-price_of_each_credit = 10
+price_of_each_credit = 9
 # Client: ____________________________________________________________________________________________________________  
 bot = telegram.Bot(TOKEN)
 app = FastAPI()
@@ -73,7 +73,7 @@ Available Credits: {credits}
 Credits used: {credits_used}
 
 <b><u>Pricing:</u></b>
-You can buy bot credits for $10/credit.\nWhenever you purchase a slot successfully, one credit will be deducted from your account.\nIf you resell any of the slots you've purchased, you won't get a refund for the credits used.
+You can buy bot credits for $9/credit.\nWhenever you purchase a slot successfully, one credit will be deducted from your account.\nIf you resell any of the slots you've purchased, you won't get a refund for the credits used.
 
 <b><u>How to top-up credits?</u></b>
 1. Visit the link below, determine the amount of credits you wish to purchase and proceed to pay with PayNow.
