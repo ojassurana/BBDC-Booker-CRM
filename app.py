@@ -662,6 +662,7 @@ async def echo(request: Request):
                                     user_message_confirmation += "You have no more credits left. Kindly please add more credits using the /credits command"
                                 await send_text(chat_id, message_confirmation)
                                 await send_text(user_status["_id"], user_message_confirmation)
+                                await send_text(user_status["_id"], "Please use /choose_session command if you want to update your availible slots.")
                                 await send_text(user_status["_id"], "⚠️ Please use /start_checking command AGAIN to start checking for new slots. ⚠️")
                                 return {"status": "ok"}    
                     elif "/view_booking_history" in update.message.text:
