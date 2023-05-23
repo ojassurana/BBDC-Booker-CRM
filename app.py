@@ -572,7 +572,7 @@ async def echo(request: Request):
                                 text += f"<b>BBDC Password:</b> {client_status['password']}\n"
                                 text += f"<b>Credits:</b> {client_status['credits']}\n"
                                 text += f"<b>Phone number:</b> {client_status['phone']}\n"
-                                text += f"<b>Type:</b> {'Automatic' if client_status['type'] else 'Manual'}\n"
+                                text += f"<b>Type: </b>"+ client_status['type'] + "\n"
                                 text += f"<b>Checking:</b> {'Yes' if client_status['checking'] else 'No'}\n"
                                 await send_text(chat_id, text)
                                 table = generate_table(client_status['session_choices'])
