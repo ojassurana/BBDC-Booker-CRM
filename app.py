@@ -436,6 +436,7 @@ async def echo(request: Request):
                     elif "/start_checking" == update.message.text:
                         if client_status["checking"] == True:
                             await send_text(chat_id, "You are already in the queue for checking. Please wait for the next available slot.")
+                            await send_text(chat_id, "⚠️ If you wish to stop checking for new practical slots, use the /stop_checking command ⚠️ ")
                             return {"status": "ok"}
                         else:
                             if client_status['credits'] < 1:
@@ -449,6 +450,7 @@ async def echo(request: Request):
                                     await send_text(chat_id, "We have started looking for sessions for you. If you wish to make any changes, use the /choose_session commmand.\n⚠️<b>Do note that we can inform you upto 2.5hrs before your practical lesson that your slot has been booked.</b>⚠️\nThe following are the sessions you have selected to choose from:")
                                     await send_text(chat_id, generate_table(client_status['session_choices']))
                                     await bot.send_photo(chat_id=chat_id, photo="https://bbdcbot.s3.ap-southeast-1.amazonaws.com/Timings.png", caption="Please note the timings of each session.")
+                                    await send_text(chat_id, "⚠️ If you wish to stop checking for new practical slots, use the /stop_checking command ⚠️ ")
                                     clients.update_one({'_id': chat_id}, {'$set': {'checking': True}})
                                     return {"status": "ok"}
                     elif "/stop_checking" == update.message.text:
