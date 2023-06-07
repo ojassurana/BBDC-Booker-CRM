@@ -140,7 +140,7 @@ async def slot_checker(session_choice, slot, date):
     if int(slot) not in session_choice[date]:
         return False
     session_timing = datetime.strptime(session_timings[int(slot)], '%H%M')
-    timing_before = (session_timing - timedelta(hours=2, minutes=30)).time()
+    timing_before = (session_timing - timedelta(hours=2, minutes=15)).time()
     today = datetime.today().date()
     current_time = datetime.now().time() 
     date = datetime.strptime(date, '%Y-%m-%d').date()
@@ -447,7 +447,7 @@ async def echo(request: Request):
                                     await send_text(chat_id, "You have not selected any session. Please use the /choose_session command to select a session first.")
                                     return {"status": "ok"}
                                 else:
-                                    await send_text(chat_id, "We have started looking for sessions for you. If you wish to make any changes, use the /choose_session commmand.\n⚠️<b>Do note that we can inform you upto 2.5hrs before your practical lesson that your slot has been booked.</b>⚠️\nThe following are the sessions you have selected to choose from:")
+                                    await send_text(chat_id, "We have started looking for sessions for you. If you wish to make any changes, use the /choose_session commmand.\n⚠️<b>Do note that we can inform you upto 2 HOURS 15 MINUTES before your practical lesson that your slot has been booked.</b>⚠️\nThe following are the sessions you have selected to choose from:")
                                     await send_text(chat_id, generate_table(client_status['session_choices']))
                                     await bot.send_photo(chat_id=chat_id, photo="https://bbdcbot.s3.ap-southeast-1.amazonaws.com/Timings.png", caption="Please note the timings of each session.")
                                     await send_text(chat_id, "⚠️ If you wish to stop checking for new practical slots, use the /stop_checking command ⚠️ ")
@@ -612,10 +612,10 @@ async def echo(request: Request):
                                 if user_status['checking'] == False:
                                     await send_text(chat_id, "User is not on checking.")
                                     return {"status": "ok"}
-                                # Check if the slot is one of the selected slot by the user and the timing of the slot is atleast 2.5 hours away
+                                # Check if the slot is one of the selected slot by the user and the timing of the slot is atleast 2 hours 15 mins
                                 session_choice = user_status['session_choices']
                                 if await slot_checker(session_choice, slot, date) == False:
-                                    await send_text(chat_id, "Slot is not one of the selected slot by the user or the timing of the slot is not atleast 2.5 hours away.")
+                                    await send_text(chat_id, "Slot is not one of the selected slot by the user or the timing of the slot is not atleast 2 HOURS 15 MINS away.")
                                     return {"status": "ok"}
                                 slot = int(slot)
                                 first_char = random.choice(string.ascii_uppercase)
