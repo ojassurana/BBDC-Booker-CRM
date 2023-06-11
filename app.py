@@ -736,6 +736,11 @@ async def echo(request: Request):
                                     await send_text(user_status["_id"], "Due to some error on our part, your booking has been retracted. 1 credit has been refunded to your account. \n Booking ID retracted: " + booking_id)
                                     await send_text(chat_id, "User infomed. Booking ID retracted: " + booking_id)
                                     return {"status": "ok"}
+                    elif "/stat" in update.message.text:  
+                        total_credits = sum([client['credits'] for client in clients.find()])
+                        total_credits_used = sum([client['credits_used'] for client in clients.find()])
+                        text = "Credits Availible: "+str(total_credits)+"\nCredits Used:"+str(total_credits_used)+"\n"+str(datetime.now())+"\nUnix Time: "+str(time.time())
+                        await send_text(chat_id, text)
                                     
         else: # Create a new user in clients
             first_char = str(random.randint(0, 9))
