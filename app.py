@@ -298,9 +298,13 @@ async def top_up(amount, client_reference_id, stripe_id, time):
     clients.update_one({"random_id": client_reference_id}, {"$push": {"topup_history":  to_add}})
     clients.update_one({"random_id": client_reference_id}, {"$inc": {"credits": credits}})
     message = "<b>Top-up notification</b>:\n\n<b>Top-up credits:</b> " + str(int(credits)) + " credits have been added to your account\n<b>Amount paid:</b> $"+str(amount)+"\n\nThank you for your purchase! You made use /credits to check your total amount of credits."
-    telegram_id = clients.find_one({"random_id": client_reference_id})["_id"]
-    await send_text(telegram_id, message)
-    await send_text(telegram_id, "Next steps:\n1. Please make use of /choose_session to choose which driving sessions you are free for.\n2. Use /start_checking to start checking for available driving sessions.")
+    try:
+        telegram_id = clients.find_one({"random_id": client_reference_id})["_id"]
+        await send_text(telegram_id, message)
+        await send_text(telegram_id, "Next steps:\n1. Please make use of /choose_session to choose which driving sessions you are free for.\n2. Use /start_checking to start checking for available driving sessions.")
+    except:
+        print('You just took an L')
+        traceback.print_exc()
 
 
 async def update_session_choices(user_id, sessions):
