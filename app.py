@@ -91,7 +91,10 @@ admin = users['admin']
 performance = users['performance']
 
 def update_performance(person_id, value):
-    performance.update_one({"_id": str(person_id)}, {"$inc": {"count": value}})
+    try:
+        performance.update_one({"_id": str(person_id)}, {"$inc": {"count": value}})
+    except:
+        print("Error updating performance")
 
 
 def retract_booking_validator(input_str):
@@ -747,6 +750,7 @@ async def echo(request: Request):
                                     clients.update_one({'random_id': user_id}, {'$set': {'booking_history': booking_history}})
                                     await send_text(user_status["_id"], "Due to some error on our part, your booking has been retracted. 1 credit has been refunded to your account. \n Booking ID retracted: " + booking_id)
                                     await send_text(chat_id, "User infomed. Booking ID retracted: " + booking_id)
+                                    person_id = update.message.from_user.id
                                     update_performance(person_id, -1)
                                     return {"status": "ok"}
                     elif "/stat" in update.message.text:  
