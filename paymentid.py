@@ -10,6 +10,6 @@ def get_payment_id(checkout_id):
     return payment_intent.id
 
 # Example usage
-checkout_id = "cs_live_a1wxNyPUj0FzavU8Zwx05jIKvNlTBtRm209VWpLbqk6cyWkYWSLg1vOjHb"
+checkout_id = "cs_live_a1Y4g4S3JAloo1pLG5ejfpEwI6bPDsIuebKPVLzcZ0uXBXjzfciMdU1ktL"
 payment_id = get_payment_id(checkout_id)
 print(payment_id)

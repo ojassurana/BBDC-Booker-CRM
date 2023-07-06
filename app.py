@@ -444,6 +444,7 @@ async def echo(request: Request):
                             return {"status": "ok"}
                         else:
                             await send_text(chat_id, "Click on the following link to let us know your availible timings:\n  <a href='https://bbdcbot.s3.ap-southeast-1.amazonaws.com/index.html?id="+client_status['random_id']+"'>Click Here</a>")
+                            await send_text(chat_id, "⚠️ Please choose <b>as many free slots as possbile</b> to maximise our probability of booking a slot for you at the earliest! ⚠️")
                             return {"status": "ok"}
                     elif "/start_checking" == update.message.text:
                         if client_status["checking"] == True:

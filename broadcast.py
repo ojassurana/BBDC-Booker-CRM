@@ -30,11 +30,16 @@ Secure your spot now at: www.teachx.me/chatgpt
 '''
 
 message = '''
-🚨 Kindly be reminded to choose as <b>many slots as possible</b> when you click on the link after pressing /choose_session
+🚨 <b>Important Broadcast</b> 🚨
 
-😀 This is the maximise our probability of booking a slot for you.
+Reminder to press /start_checking if you haven't yet so that we can book slots for you.
+Before doing that, please use /choose_session to choose <b>as many possible free slots</b> as possible.
+
+😀 This is the <b>maximise our probability</b> of booking a slot for you at the earliest!
+
+⚠️If you have any queries whatsoever or any doubts, please contact @ojasx right away!
 '''
-
+message = "🚨 Everytime the bot books a slot for you, you have to press /start_checking again."
 # lst_ids = [495589406]
 for id in lst_ids:
     print(id)
