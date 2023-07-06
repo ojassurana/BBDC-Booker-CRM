@@ -755,7 +755,7 @@ async def echo(request: Request):
                         text = "Credits Availible: "+str(total_credits)+"\nCredits Used:"+str(total_credits_used)+"\n"+str(datetime.now())+"\nUnix Time: "+str(time.time())
                         await send_text(chat_id, text)
                     elif "/performance" in update.message.text:
-                        whole_performance = performance.find_one()
+                        whole_performance = performance.find()
                         # The formant of performance collection is {_id, name, count }
                         text = ""
                         for person in whole_performance:
