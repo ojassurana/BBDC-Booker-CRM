@@ -88,6 +88,11 @@ https://buy.stripe.com/{product_payment_code}?client_reference_id={random_id}
 users = mongo['Users']
 clients = users['clients']
 admin = users['admin']
+performance = users['performance']
+
+def update_performance(person_id, value):
+    performance.update_one({"_id": str(person_id)}, {"$inc": {"count": value}})
+
 
 def retract_booking_validator(input_str):
     input_list = input_str.split(" ")
@@ -653,6 +658,9 @@ async def echo(request: Request):
                                     7: '1920',
                                     8: '2110'
                                 }
+                                # This message is received on a group, obtain for me the user_id of the user who booked the slot
+                                person_id = update.message.from_user.id
+                                update_performance(person_id, 1)
                                 user_message_confirmation = "<u><b>Booking Confirmation:</b></u>\n\n"
                                 user_message_confirmation += f"<b>Booking ID:</b> {booking_id}\n"
                                 date1 = datetime.strptime(date, "%Y-%m-%d").strftime("%d %B %Y")
@@ -739,11 +747,19 @@ async def echo(request: Request):
                                     clients.update_one({'random_id': user_id}, {'$set': {'booking_history': booking_history}})
                                     await send_text(user_status["_id"], "Due to some error on our part, your booking has been retracted. 1 credit has been refunded to your account. \n Booking ID retracted: " + booking_id)
                                     await send_text(chat_id, "User infomed. Booking ID retracted: " + booking_id)
+                                    update_performance(person_id, -1)
                                     return {"status": "ok"}
                     elif "/stat" in update.message.text:  
                         total_credits = sum([client['credits'] for client in clients.find()])
                         total_credits_used = sum([client['credits_used'] for client in clients.find()])
                         text = "Credits Availible: "+str(total_credits)+"\nCredits Used:"+str(total_credits_used)+"\n"+str(datetime.now())+"\nUnix Time: "+str(time.time())
+                        await send_text(chat_id, text)
+                    elif "/performance" in update.message.text:
+                        whole_performance = performance.find_one()
+                        # The formant of performance collection is {_id, name, count }
+                        text = ""
+                        for person in whole_performance:
+                            text += f"{person['name']}: {person['count']}\n"
                         await send_text(chat_id, text)
                                     
         else: # Create a new user in clients
