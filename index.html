@@ -5,6 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    text-align: center;
+}
+table {
+    margin: 0 auto;
+}
+input[type="checkbox"] {
+    width: 40px;
+    height: 40px;
+    vertical-align: middle;
+}
+td, th {
+    border: 1px solid #000000;
+    padding: 10px;
+    text-align: center;
+    vertical-align: middle;
+    background-color: #77b7ff;
+    color: #ffffff;
+}
+td:first-child, th:first-child {
+    background-color: #000000;
+}
+@media screen and (max-width: 600px) {
+    td, th {
+        padding: 5px;
+    }
+    td:first-child, th:first-child {
+        background-color: #77b7ff;
+        color: #000000;
+    }
+}
+
     .customButton { 
     border:3px solid #000000;
     border-radius:81px;
