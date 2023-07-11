@@ -230,7 +230,28 @@ function formatDate(date) {
     function padZero(number) {
       return number.toString().padStart(2, "0");
     }
-  </script>
+  
+function toggleAllCheckboxes() {
+    // Get all the checkboxes in the form
+    var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    
+    // Check if all checkboxes are checked
+    var allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+    
+    // Loop through all the checkboxes and set their checked property
+    for (var i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].checked = !allChecked;
+    }
+    
+    // Update button text based on the checked state
+    var button = document.getElementById("toggleButton");
+    if (allChecked) {
+        button.textContent = "Select All Sessions";
+    } else {
+        button.textContent = "Deselect All Sessions";
+    }
+}
+</script>
 </head>
 <body onload="generateTable()">
     <form action="https://bbdc-booker-crm.herokuapp.com/form" method="POST">
@@ -238,7 +259,8 @@ function formatDate(date) {
         <table id="session-table">
         </table>
         <br>
-    </form>
+    <button id="toggleButton" onclick="toggleAllCheckboxes()" type="button" class="btn customButton large">Select All Sessions</button>
+</form>
     <p>Choose the sessions which you want us to book for you.<br> Please <b>try to select as many sessions as possible to maximise our ability to book a slot for you</b>. <br><br>You may come back to this website anytime to change and update the slots which you are free for.</p>
     <br>
     <div class="html_button btn-left">
